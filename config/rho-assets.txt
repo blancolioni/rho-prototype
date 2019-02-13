@@ -1,0 +1,12 @@
+texture = { default "textures/default-texture.png" }
+texture = { GreenSkin "textures/GreenSkin.png" }
+texture = { Dirt "textures/dirt01.png" }
+texture = { SphereMap "textures/SphereMap.png" }
+mesh = { ogrehead.mesh "mesh/ogrehead.xml"}
+material = { default "material/default.material" }
+material = { "Ogre/Eyes" "material/ogre-eyes.material" }
+material = { "Ogre/Skin" "material/ogre-skin.material" }
+material = { "Ogre/Tusks" "material/ogre-tusks.material" }
+material = { "Ogre/Earring" "material/ogre-earring.material" }
+material = { "Rho/Blue" "material/blue.material" }
+material = { "Rho/Solid_Lit_Color" "material/solid_lit_color.material"}

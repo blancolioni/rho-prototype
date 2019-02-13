@@ -1,0 +1,20 @@
+with "../xi.gpr";
+
+project Red_Book is
+
+   for Main use ("red_book.adb");
+
+   package Compiler is
+      for Default_Switches ("ada") use ("-gnat2012", "-g");
+   end Compiler;
+
+   package Linker is
+      for Default_Switches ("ada") use ("-g", "C:\Users\fraser\Documents\kiln\globe3d\GLOBE_3D\obj\libwin32\glee.o", "-LC:\Users\fraser\Documents\kiln\globe3d\GLOBE_3D\obj\libwin32", "-lopengl32", "-lglu32", "-lfreeglut");
+   end Linker;
+
+   package Builder is
+      for Default_Switches ("ada") use ("-g", "-s");
+   end Builder;
+
+end Red_Book;
+

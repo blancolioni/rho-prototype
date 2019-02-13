@@ -1,0 +1,125 @@
+attach_shader = { program = uint shader = uint }
+  
+Bind_Buffer = {
+   target = enum
+   buffer = uint
+   }
+
+Bind_Texture = {
+   target = enum
+   texture = uint
+   }    
+
+Bind_Vertex_Array = { array_id = uint }
+
+Blend_Func = { sfactor = enum dfactor = enum }
+
+Buffer_Data = { target = enum size = sizeiptr data = address usage = enum}
+
+clear = { mask = bit_mask }
+
+clear_color = { red = float green = float blue = float alpha = float }
+
+compile_shader = { shader = uint }
+
+create_program = { return = uint }
+
+create_shader = { shader_type = enum return = uint }
+
+delete_shader = { shader = uint }
+
+disable = { capability = enum }
+
+disable_vertex_attribute_array = {
+  index = uint
+  c = glDisableVertexAttribArray
+}
+
+draw_arrays = {
+  mode = enum
+  first = int
+  count = sizei
+}
+
+enable = { capability = enum }
+
+enable_vertex_attribute_array = {
+  index = uint
+  c = glEnableVertexAttribArray
+}
+
+gen_buffers = { size = sizei buffers = access_uint }
+
+gen_textures = { size = sizei textures = access_uint }
+
+gen_vertex_arrays = { size = sizei textures = access_uint }
+
+get_error = { return = enum }
+
+get_program = { program = uint pname = enum params = access_int c = glGetProgramiv }
+
+get_program_info_log = { program = uint max_length = sizei length = access_sizei info_log = string }
+
+get_shader = { shader = uint pname = enum params = access_int c = glGetShaderiv }
+
+get_shader_info_log = { shader = uint max_length = sizei length = access_sizei info_log = string }
+
+get_string = { name = enum return = string }
+
+get_uniform_location = { program = uint name = string return = int }
+
+link_program = { program = uint }
+
+polygon_mode = { face = enum mode = enum }
+
+shader_source = {
+   shader = uint
+   count = sizei
+   source = access_string
+   length = access_int
+   }
+   
+tex_image_2D = {
+   target = enum 
+   level = int
+   internal_format = int
+   width = sizei
+   height = sizei
+   border = int
+   format = enum
+   ptype = enum
+   pixels = address
+   }
+
+ tex_parameter = {
+    target = enum parameter_name = enum parameter_value = enum c = glTexParameteri
+    }
+
+ tex_parameter = {
+    target = enum parameter_name = enum parameter_value = access_float c = glTexParameterfv
+    }
+   
+uniform_matrix = {
+   location = int
+   count = sizei
+   transpose = boolean
+   value = access_float
+   c = glUniformMatrix4fv
+}
+
+use_program = {
+   program = uint
+   }
+
+vertex_attribute_pointer = {
+  index = uint
+  size = int
+  element_type = enum
+  normalized = boolean
+  stride = sizei
+  pointer = storage_offset
+  c = glVertexAttribPointer
+}
+    
+viewport = { x = int y = int w = sizei h = sizei }
+   

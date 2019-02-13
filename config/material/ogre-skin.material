@@ -1,0 +1,6 @@
+name = "Ogre/Skin"
+#color = { 1 1 1 1.0}
+texture = GreenSkin
+texture_address_mode = mirror
+ambient = { 0.3 0.8 0.3 }
+            

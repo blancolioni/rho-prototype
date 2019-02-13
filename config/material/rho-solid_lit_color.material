@@ -1,0 +1,4 @@
+parameters = { parameter = { name = color type = color } }
+
+lighting
+ambient = color

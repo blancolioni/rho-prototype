@@ -1,0 +1,49 @@
+body
+{
+    margin: 0;
+    padding: 0;
+    //overflow: hidden;
+}
+
+.top
+{
+    width: 100%;
+    height: 100px;
+    background: yellow;
+    position: absolute;
+}
+
+.sidebarleft
+{
+    width: 100px;
+    background: red;
+    position:absolute;
+    top: 100px;
+    left: 0px;
+    bottom: 100px;
+}
+
+.sidebarright
+{
+    width: 100px;
+    background: red;
+    position:absolute;
+    right: 0px;
+    top: 100px;
+    bottom: 100px;
+}
+
+.footer
+{
+    width: 100%;
+    height: 100px;
+    background: purple;
+    position: absolute;
+    bottom:0px;
+}
+
+.text
+{
+    width: 200px;
+    height: 50px;
+}

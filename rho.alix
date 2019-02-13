@@ -1,0 +1,42 @@
+project_name = Rho
+source_dir = src
+source_dir = src/drawing
+source_dir = src/entities
+source_dir = src/external
+source_dir = src/interfaces
+source_dir = src/light
+source_dir = src/main
+source_dir = src/material
+source_dir = src/mesh
+source_dir = src/numerics
+source_dir = src/rendering
+source_dir = src/rendering/opengl
+source_dir = src/scenes
+source_dir = src/shaders
+source_dir = src/textures
+source_dir = src/toolkit
+source_dir = src/tools
+source_dir = red_book
+main_unit = rho_demo
+exec_name = rho_demo
+config_dir = config
+path_unit = { unit = Rho.Paths path = src/rho-paths.ads }
+language = Ada
+language = C
+builder_option = "-g"
+builder_option = "-k"
+builder_option = "-s"
+compiler_option = "-g"
+compiler_option = "-gnatwea.k.w"
+compiler_option = "-gnatyabcefhiklmnoprstABCOSux"
+compiler_option = "-gnat2012"
+linker_option = "-g"
+linker_option = "-Llib"
+linker_option = "-lopengl32"
+linker_option = "-lfreeglut"
+depend = { project = wlib version = any }
+depend = { project = gcs version = any }
+depend = { project = agama version = any }
+depend = { project = partoe version = any }
+depend = { project = tropos version = any }
+depend = { project = gtkada external = yes }

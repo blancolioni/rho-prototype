@@ -1,0 +1,14 @@
+syntax: glob
+*.o
+*.orig
+*.ali
+*~
+b~*.ad[bs]
+build/bin/*
+build/obj/*
+src/xi-paths.ads
+freeglut-3.0.0
+agama.log
+Courier New 1.png
+rho.gpr
+rho_linux.gpr

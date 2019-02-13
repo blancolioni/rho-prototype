@@ -1,0 +1,165 @@
+* {
+    engine: adwaita;
+    padding: 1;
+
+    /* Style properties */
+    -GtkToolButton-icon-spacing: 4;
+
+    -GtkTextView-error-underline-color: @error_color;
+
+    -GtkPaned-handle-size: 5;
+
+    -GtkCheckButton-indicator-size: 16;
+    -GtkCheckMenuItem-indicator-size: 12;
+
+    /* The size for scrollbars. The slider is 2px smaller, but we keep it
+     * up so that the whole area is sensitive to button presses for the
+     * slider. The stepper button is larger in both directions, the slider
+     * only in the width
+     */
+
+    -GtkScrolledWindow-scrollbar-spacing: 0;
+    -GtkScrolledWindow-scrollbars-within-bevel: 1;
+
+    -GtkToolItemGroup-expander-size: 12;
+    -GtkExpander-expander-size: 12;
+    -GtkToolbar-internal-padding: 4;     /* ??? */
+
+    -GtkMenu-horizontal-padding: 0;
+    -GtkMenu-vertical-padding: 0;
+
+    -GtkWidget-link-color: @link_color;
+    -GtkWidget-visited-link-color: @link_color;
+    -GtkIMHtml-hyperlink-color: @link_color;
+    -GtkHTML-link-color: @link_color;
+
+    -GtkWidget-wide-separators: 1;
+
+    -WnckTasklist-fade-overlay-rect: 0;
+
+    -GtkEntry-inner-border: 2;
+    -GtkEntry-progress-border: 0;
+
+    /* Style */
+    background-color: @theme_bg_color;
+    color: @theme_fg_color;
+    border-radius: 3;
+
+    -GtkWidget-focus-padding: 2;
+    -GtkWidget-focus-line-width: 1;
+    -adwaita-focus-border-color: alpha (@theme_text_color, 0.4);
+    -adwaita-focus-border-radius: 2;
+    -adwaita-focus-fill-color: none;
+    -adwaita-focus-border-gradient: none;
+    -adwaita-focus-border-dashes: 1;
+}
+
+/***************
+ * Base States *
+ ***************/
+*:hover {
+    background-color: shade (@theme_bg_color, 1.02);
+    color: @theme_fg_color;
+}
+
+*:selected {
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}
+
+*:focused {
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}
+
+*:insensitive {
+    background-color: @insensitive_bg_color;
+    color: @insensitive_fg_color;
+}
+
+*:active {
+    background-color: shade (@theme_bg_color, 0.915);
+}
+
+.background {
+    border-style: none;
+    border-width: 0;
+    border-radius: 0;
+}
+
+.tooltip {
+    padding: 4;
+    border-style: none;
+    background-color: @theme_tooltip_bg_color;
+    color: @theme_tooltip_fg_color;
+}
+
+.grip {
+    background-color: shade (@inactive_frame_color, 0.93);
+}
+
+.pane-separator {
+    background-color: @theme_bg_color;
+    color: shade (@inactive_frame_color, 0.80);
+}
+
+.pane-separator:prelight,
+.pane-separator:selected {
+    background-color: @theme_bg_color;
+    border-color: shade (@highlighted_border, 0.964);
+}
+
+Label: {
+   foreground-color: @text_color;
+}
+
+Button: {
+    //  padding: 1 4;
+
+    -adwaita-focus-fill-color: alpha (@theme_base_color, 0.35);
+    -adwaita-focus-border-gradient: -gtk-gradient (linear,
+                                                   left top, left bottom,
+                                                   from (alpha (@keyboard_focus_border_a, 0.62)),
+                                                   to (alpha (@keyboard_focus_border_b, 0.62)));
+    -adwaita-focus-border-radius: 1;
+    -adwaita-focus-border-dashes: 0;
+    -GtkWidget-focus-line-width: 2;
+
+    -GtkButton-child-displacement-x: 1;
+    -GtkButton-child-displacement-y: 1;
+    -GtkButton-image-spacing: 4;
+    -GtkButton-interior-focus: true;
+    -GtkButton-default-border: 0;
+    -GtkButton-inner-border: 0;
+
+    border-radius: 2;
+    border-width: 1;
+    border-color: @button_border;
+    border-style: solid;
+
+    background-image: -gtk-gradient (linear,
+				     left top, left bottom,
+                                     from (@button_gradient_color_a),
+                                     to (@button_gradient_color_b));
+}
+
+Button:hover {
+    background-color: shade (@theme_bg_color, 1.02);
+    color: @theme_fg_color;
+    border-color: @button_border;
+    background-image: -gtk-gradient (linear,
+				     left top, left bottom,
+				     from (@button_hover_gradient_color_a),
+				     to (@button_hover_gradient_color_b));
+}
+
+Progress_Bar {
+    background-image: -gtk-gradient (linear,
+                                     left top, left bottom,
+                                     from (@progressbar_background_a),
+                                     to (@progressbar_background_b));
+
+    border-radius: 3;
+    border-style: solid;
+    border-color: @progressbar_border;
+}

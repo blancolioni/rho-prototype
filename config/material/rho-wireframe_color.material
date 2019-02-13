@@ -1,0 +1,5 @@
+parameters = { parameter = { name = color type = color } }
+
+ambient = color
+
+polygon-mode = wireframe
