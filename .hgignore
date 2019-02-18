@@ -12,3 +12,4 @@ agama.log
 Courier New 1.png
 rho.gpr
 rho_linux.gpr
+src/rho-paths.ads
