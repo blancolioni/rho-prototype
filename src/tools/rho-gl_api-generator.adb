@@ -264,7 +264,9 @@ package body Rho.GL_API.Generator is
                   end if;
 
                   Put_Line ("      "
-                            & (if Is_Procedure then "" else "return ")
+                            & (if Is_Procedure
+                              then ""
+                              else "return " & Return_Type & "'Value (")
                             & "Context.Execute");
                   Put_Line
                     ("        (""" & To_WebGL_Command_Name (Name)
@@ -313,7 +315,11 @@ package body Rho.GL_API.Generator is
                         end if;
                      end;
                   end loop;
-                  Put_Line ("        & "")"");");
+                  Put ("        & "")"")");
+                  if not Is_Procedure then
+                     Put (")");
+                  end if;
+                  Put_Line (";");
                   Put_Line ("   end " & Ada_Name & ";");
                else
                   Put_Line (";");
