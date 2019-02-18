@@ -107,7 +107,9 @@ package body Rho.GL_API.Generator is
             Group_Mask       : Group_Record;
          begin
             if Feature.Command_Set.Contains (Name)
-              and then Is_Procedure
+              and then (Is_Procedure
+                        or else Return_Type = "GLint"
+                        or else Return_Type = "GLuint")
               and then Ada_Name /= "Read_Pixels"
               and then Ada_Name /= "Get_Vertex_Attrib_Pointerv"
             then
@@ -311,7 +313,7 @@ package body Rho.GL_API.Generator is
                         end if;
                      end;
                   end loop;
-                  Put_Line (" & "")"");");
+                  Put_Line ("        & "")"");");
                   Put_Line ("   end " & Ada_Name & ";");
                else
                   Put_Line (";");
