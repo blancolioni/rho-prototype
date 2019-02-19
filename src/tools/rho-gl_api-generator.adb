@@ -47,6 +47,28 @@ package body Rho.GL_API.Generator is
             Put_Line ("     (Context   : in out Context_WebGL_Type;");
             Put_Line ("      Canvas  : in out Canvas_Type'Class);");
             New_Line;
+
+            Put_Line ("   procedure Perspective");
+            Put_Line
+              ("     (Context       : in out Context_WebGL_Type'Class;");
+            Put_Line ("      Matrix        : out Matrix_4;");
+            Put_Line ("      Field_Of_View : GLfloat;");
+            Put_Line ("      Aspect_Ratio  : GLfloat;");
+            Put_Line ("      Near, Far     : GLfloat);");
+            New_Line;
+
+            Put_Line ("   procedure Translate");
+            Put_Line ("     (Context : in out Context_WebGL_Type'Class;");
+            Put_Line ("      Matrix  : in out Matrix_4;");
+            Put_Line ("      X, Y, Z : GLfloat);");
+            New_Line;
+
+            Put_Line ("   procedure Uniform_Matrix");
+            Put_Line ("     (Context  : in out Context_WebGL_Type'Class;");
+            Put_Line ("      Location : GLuint;");
+            Put_Line ("      Matrix   : Matrix_4);");
+            New_Line;
+
          end if;
       end if;
 
@@ -55,32 +77,41 @@ package body Rho.GL_API.Generator is
          Put_Line ("     (Context : Context_WebGL_Type'Class;");
          Put_Line ("      Name    : String)");
          Put_Line ("     return String");
-         Put_Line ("   is (Context.Property "
+         Put_Line ("   is (if Name = ""TRUE"" then ""true""");
+         Put_Line ("       elsif Name = ""FALSE"" then ""false""");
+         Put_Line ("       else Context.Property "
                    & "(Name (Name'First + 3 .. Name'Last)));");
 
-         New_Line;
-         Put_Line ("   -------------------------------");
-         Put_Line ("   -- Get_Drawing_Context_WebGL --");
-         Put_Line ("   -------------------------------");
          New_Line;
          Put_Line ("   procedure Get_Drawing_Context_WebGL");
          Put_Line ("     (Context : in out Context_WebGL_Type;");
          Put_Line ("      Canvas  : in out Canvas_Type'Class)");
-         Put_Line ("   is");
-         Put_Line ("      GID : constant String := "
-                   & "Gnoga.Server.Connection.New_GID;");
-         Put_Line ("   begin");
-         Put_Line ("      Context.Context_ID := "
-                   & "Ada.Strings.Unbounded.To_Unbounded_String (GID);");
-         Put_Line ("      Context.Connection_ID := Canvas.Connection_ID;");
+         Put_Line ("   renames Support.Get_Drawing_Context_WebGL;");
          New_Line;
-         Put_Line ("      Gnoga.Server.Connection.Execute_Script");
-         Put_Line ("        (Context.Connection_ID,");
-         Put_Line ("         ""gnoga['"" & GID & ""'] = "" &");
-         Put_Line ("           Canvas.jQuery &");
-         Put_Line ("           "".get(0).getContext('webgl');"");");
-         Put_Line ("   end Get_Drawing_Context_WebGL;");
+
+         Put_Line ("   procedure Perspective");
+         Put_Line ("     (Context       : in out Context_WebGL_Type'Class;");
+         Put_Line ("      Matrix        : out Matrix_4;");
+         Put_Line ("      Field_Of_View : GLfloat;");
+         Put_Line ("      Aspect_Ratio  : GLfloat;");
+         Put_Line ("      Near, Far     : GLfloat)");
+         Put_Line ("   renames Support.Perspective;");
          New_Line;
+
+         Put_Line ("   procedure Translate");
+         Put_Line ("     (Context : in out Context_WebGL_Type'Class;");
+         Put_Line ("      Matrix  : in out Matrix_4;");
+         Put_Line ("      X, Y, Z : GLfloat)");
+         Put_Line ("   renames Support.Translate;");
+         New_Line;
+
+         Put_Line ("   procedure Uniform_Matrix");
+         Put_Line ("     (Context  : in out Context_WebGL_Type'Class;");
+         Put_Line ("      Location : GLuint;");
+         Put_Line ("      Matrix   : Matrix_4)");
+         Put_Line ("   renames Support.Uniform_Matrix;");
+         New_Line;
+
       end if;
 
       for Command of Document.Command_List loop
@@ -100,16 +131,18 @@ package body Rho.GL_API.Generator is
             Is_Procedure : constant Boolean :=
                              Return_Type = "";
             First_Parameter : Boolean := True;
-            Have_Data_Array : Boolean := False;
-            Data_Array_Param : Parameter_Record;
+            Have_Float_Data_Array  : Boolean := False;
+            Float_Data_Array_Param : Parameter_Record;
             Have_Group_Mask  : Boolean := False;
             Group_Parameter  : Parameter_Record;
-            Group_Mask       : Group_Record;
+            --  Group_Mask       : Group_Record;
          begin
-            if Feature.Command_Set.Contains (Name)
+            if (Feature.Command_Set.Contains (Name)
+                or else Command.API_Override (Binding))
               and then (Is_Procedure
                         or else Return_Type = "GLint"
-                        or else Return_Type = "GLuint")
+                        or else Return_Type = "GLuint"
+                        or else Return_Type = "Boolean")
               and then Ada_Name /= "Read_Pixels"
               and then Ada_Name /= "Get_Vertex_Attrib_Pointerv"
             then
@@ -149,9 +182,9 @@ package body Rho.GL_API.Generator is
                                          -Parameter.Group_Name;
                   begin
 
-                     if Parameter.Data_Array then
-                        Have_Data_Array := True;
-                        Data_Array_Param := Parameter;
+                     if Parameter.Float_Data_Array then
+                        Have_Float_Data_Array := True;
+                        Float_Data_Array_Param := Parameter;
                      end if;
 
                      if First_Parameter then
@@ -168,10 +201,14 @@ package body Rho.GL_API.Generator is
                      Put (Parameter_Name (Parameter_Name'First + 1
                           .. Parameter_Name'Last));
                      Put (" : ");
-                     if Parameter.Data_Array then
+                     if Parameter.Float_Data_Array then
                         Put ("Float_Array");
+                     elsif Parameter.Byte_Offset then
+                        Put ("Natural");
                      elsif Parameter.Writeable_Array then
                         Put ("GLvoidptr");
+                     elsif Parameter_Group = "Boolean" then
+                        Put (Parameter_Group);
                      elsif Parameter_Group = ""
                        or else not Document.Group_Map.Contains
                          (Parameter_Group)
@@ -189,7 +226,7 @@ package body Rho.GL_API.Generator is
                               Put ("_Array");
                               Have_Group_Mask := True;
                               Group_Parameter := Parameter;
-                              Group_Mask := Group;
+                              --  Group_Mask := Group;
                            end if;
                         end;
                      end if;
@@ -214,12 +251,12 @@ package body Rho.GL_API.Generator is
                      Put_Line ("   is");
                   end if;
 
-                  if Have_Data_Array or else Have_Group_Mask then
+                  if Have_Float_Data_Array or else Have_Group_Mask then
                      Put_Line
                        ("      use Ada.Strings.Unbounded;");
                   end if;
 
-                  if Have_Data_Array then
+                  if Have_Float_Data_Array then
                      Put_Line
                        ("      Data_Image : Unbounded_String;");
                   end if;
@@ -230,9 +267,10 @@ package body Rho.GL_API.Generator is
                   end if;
 
                   Put_Line ("   begin");
-                  if Have_Data_Array then
+                  if Have_Float_Data_Array then
                      Put_Line
-                       ("      for X of " & (-Data_Array_Param.Parameter_Name)
+                       ("      for X of "
+                        & (-Float_Data_Array_Param.Parameter_Name)
                         & " loop");
                      Put_Line
                        ("         if Data_Image /= """" then");
@@ -263,13 +301,20 @@ package body Rho.GL_API.Generator is
                        ("      end loop;");
                   end if;
 
-                  Put_Line ("      "
-                            & (if Is_Procedure
-                              then ""
-                              else "return " & Return_Type & "'Value (")
-                            & "Context.Execute");
+                  Put ("      ");
+                  if not Is_Procedure then
+                     Put ("return ");
+                     if Command.Creates_Object then
+                        Put ("Support.Indexed_Javascript_Object (Context,");
+                     else
+                        Put (Return_Type & "'Value (Context.Execute (");
+                     end if;
+                  else
+                     Put ("Context.Execute (");
+                  end if;
+                  New_Line;
                   Put_Line
-                    ("        (""" & To_WebGL_Command_Name (Name)
+                    ("        """ & To_WebGL_Command_Name (Name)
                      & "(""");
                   First_Parameter := True;
                   for Parameter of Command.Parameters loop
@@ -288,7 +333,7 @@ package body Rho.GL_API.Generator is
                         end if;
                         Put ("         & ");
 
-                        if Parameter.Data_Array then
+                        if Parameter.Float_Data_Array then
                            Put
                              ("""new Float32Array(["" & "
                               & "To_String (Data_Image) & ""])""");
@@ -304,8 +349,20 @@ package body Rho.GL_API.Generator is
                            then
                               Put ("Context.GLEnum_Property (");
                            end if;
+                           if Parameter_Type = "String" then
+                              Put ("""'"" & Escape_Quotes (");
+                           elsif Parameter.Object_Reference then
+                              Put ("Support.Indexed_Object_Reference "
+                                   & "(Context, ");
+                           end if;
                            Put (To_Ada_Parameter_Name (Parameter_Name));
-                           Put ("'Image");
+                           if Parameter_Type = "String" then
+                              Put (") & ""'""");
+                           elsif Parameter.Object_Reference then
+                              Put (")");
+                           else
+                              Put ("'Image");
+                           end if;
                            if Parameter_Group /= ""
                              and then Parameter_Group /= "ColorF"
                              and then Parameter_Type /= "GLfloat"
@@ -316,7 +373,9 @@ package body Rho.GL_API.Generator is
                      end;
                   end loop;
                   Put ("        & "")"")");
-                  if not Is_Procedure then
+                  if not Is_Procedure
+                    and then not Command.Creates_Object
+                  then
                      Put (")");
                   end if;
                   Put_Line (";");
@@ -334,10 +393,19 @@ package body Rho.GL_API.Generator is
          if Binding = Gnoga then
             Put_Line ("private");
             New_Line;
-
+            Put_Line ("   package Web_Object_Id_Vectors is");
+            Put_Line ("     new Ada.Containers.Indefinite_Vectors");
+            Put_Line ("       (Positive, String);");
+            New_Line;
             Put_Line
               ("   type Context_WebGL_Type is"
-               & " new Context_Type with null record;");
+               & " new Context_Type with");
+            Put_Line
+              ("      record");
+            Put_Line
+              ("         Web_Object_Ids : Web_Object_Id_Vectors.Vector;");
+            Put_Line
+              ("      end record;");
             New_Line;
          end if;
       end if;
@@ -403,6 +471,7 @@ package body Rho.GL_API.Generator is
       Put_Line ("   type GLintptr is new GLuint;");
       Put_Line ("   type GLvoidptr is new System.Address;");
       New_Line;
+
       Put_Line ("   type Float_Array is "
                 & "array (Positive range <>) of GLfloat;");
       Put_Line ("   type CheckedInt32 is "
@@ -410,6 +479,18 @@ package body Rho.GL_API.Generator is
       Put_Line ("   type ColorF is new GLfloat;");
       Put_Line ("   type Texture is new GLuint;");
       Put_Line ("   type BufferOffset is access GLint;");
+
+      Put_Line ("   package Matrices is");
+      Put_Line ("     new Ada.Numerics.Generic_Real_Arrays (GLfloat);");
+      New_Line;
+
+      Put_Line ("   subtype Matrix_4 is");
+      Put_Line ("     Matrices.Real_Matrix (1 .. 4, 1 .. 4);");
+      New_Line;
+
+      Put_Line ("   subtype Vector_4 is");
+      Put_Line ("     Matrices.Real_Vector (1 .. 4);");
+      New_Line;
 
       for Group of Document.Group_List loop
 

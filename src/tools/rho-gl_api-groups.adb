@@ -109,15 +109,18 @@ package body Rho.GL_API.Groups is
      (Loader   : in out Group_Loader;
       Document : in out GL_API_Document'Class)
    is
+      use type Ada.Strings.Unbounded.Unbounded_String;
    begin
-      Document.Group_List.Append
-        (Group_Record'
-           (Name     => Loader.Group_Name,
-            Bit_Mask => Loader.Bit_Mask,
-            Ids      => Document.Current_Ids));
-      Document.Group_Map.Insert
-        (Ada.Strings.Unbounded.To_String (Loader.Group_Name),
-         Document.Group_List.Last);
+      if Loader.Group_Name /= "Boolean" then
+         Document.Group_List.Append
+           (Group_Record'
+              (Name     => Loader.Group_Name,
+               Bit_Mask => Loader.Bit_Mask,
+               Ids      => Document.Current_Ids));
+         Document.Group_Map.Insert
+           (Ada.Strings.Unbounded.To_String (Loader.Group_Name),
+            Document.Group_List.Last);
+      end if;
    end On_End;
 
 end Rho.GL_API.Groups;

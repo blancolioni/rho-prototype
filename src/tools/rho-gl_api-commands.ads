@@ -23,4 +23,8 @@ private
       Name   : String)
       return Tag_Loader'Class;
 
+   overriding procedure On_End
+     (Loader   : in out Commands_Loader;
+      Document : in out GL_API_Document'Class);
+
 end Rho.GL_API.Commands;

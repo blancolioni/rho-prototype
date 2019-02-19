@@ -3,6 +3,7 @@ private with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 private with Ada.Strings.Unbounded;
 private with WL.String_Maps;
 private with WL.String_Sets;
+private with Tropos;
 
 with Partoe;
 
@@ -14,8 +15,9 @@ package Rho.GL_API is
      new Partoe.Partoe_Document with private;
 
    procedure Load_API
-     (Document : in out GL_API_Document'Class;
-      Path     : String);
+     (Document           : in out GL_API_Document'Class;
+      Path               : String;
+      Configuration_Path : String);
 
    procedure Generate
      (Document : GL_API_Document'Class;
@@ -86,24 +88,31 @@ private
 
    type Parameter_Record is
       record
-         Group_Name      : Ada.Strings.Unbounded.Unbounded_String;
-         Type_Name       : Ada.Strings.Unbounded.Unbounded_String;
-         Parameter_Name  : Ada.Strings.Unbounded.Unbounded_String;
-         Data_Array      : Boolean := False;
-         Writeable_Array : Boolean := False;
+         Group_Name       : Ada.Strings.Unbounded.Unbounded_String;
+         Type_Name        : Ada.Strings.Unbounded.Unbounded_String;
+         Parameter_Name   : Ada.Strings.Unbounded.Unbounded_String;
+         Byte_Offset      : Boolean := False;
+         Float_Data_Array : Boolean := False;
+         String_Array     : Boolean := False;
+         Writeable_Array  : Boolean := False;
+         Object_Reference : Boolean := False;
       end record;
 
    package Parameter_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Parameter_Record);
 
+   type API_Flags is array (API_Binding_Language) of Boolean;
+
    type Command_Record is
       record
-         Name         : Ada.Strings.Unbounded.Unbounded_String;
-         Return_Type  : Ada.Strings.Unbounded.Unbounded_String;
-         Return_Group : Ada.Strings.Unbounded.Unbounded_String;
-         Parameters   : Parameter_Lists.List;
-         GLX_Type     : Ada.Strings.Unbounded.Unbounded_String;
-         Opcode       : Natural := 0;
+         Name           : Ada.Strings.Unbounded.Unbounded_String;
+         Return_Type    : Ada.Strings.Unbounded.Unbounded_String;
+         Return_Group   : Ada.Strings.Unbounded.Unbounded_String;
+         Parameters     : Parameter_Lists.List;
+         GLX_Type       : Ada.Strings.Unbounded.Unbounded_String;
+         Opcode         : Natural := 0;
+         Creates_Object : Boolean := False;
+         API_Override   : API_Flags := (others => False);
       end record;
 
    package Command_Lists is
@@ -128,6 +137,8 @@ private
      new Partoe.Partoe_Document with
       record
          Loaders           : Loader_Stacks.List;
+         Overrides         : Tropos.Configuration;
+         Bindings          : Tropos.Configuration;
          Constant_Map      : GL_Constant_Maps.Map;
          Constant_List     : GL_Constant_Lists.List;
          Group_Map         : Group_Maps.Map;

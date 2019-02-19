@@ -1,0 +1,114 @@
+overrides = {
+    glShaderSource = {
+      parameters = {
+         parameter = {
+            name = shader
+            type = GLuint
+            object-reference = yes
+         }
+         parameter = {
+            name = source
+            type = String
+         }
+      }
+    }
+    
+    glGetUniformLocation = {
+      parameters = {
+         parameter = {
+            name = program
+            type = GLuint
+            object-reference = yes
+         }
+         parameter = {
+            name = name
+            type = String
+         }
+      }
+      return-type = GLuint
+      creates-object = yes
+    }
+    
+    glGetAttribLocation = {
+      parameters = {
+         parameter = {
+            name = program
+            type = GLuint
+            object-reference = yes
+         }
+         parameter = {
+            name = name
+            type = String
+         }
+      }
+      return-type = GLuint
+    }
+    glVertexAttribPointer = {
+      parameters = {
+        parameter = {
+          name = index
+          type = GLuint
+          }
+        parameter = {
+          name = size
+          type = GLuint
+          }
+        parameter = {
+          name = itemType
+          group = VertexAttribPointerType
+          }
+        parameter = {
+          name = normalized
+          group = Boolean
+          }
+        parameter = {
+          name = stride
+          type = GLsizei
+          }
+        parameter = {
+          name = pointer
+          byte-offset = yes
+          }
+        }
+      }
+}
+
+bindings = {
+   glCreateBuffer = {
+     parameters = {
+     }
+     return-type = GLuint
+     creates-object = yes
+     api = { gnoga }
+   }
+   glGetShaderParameter = {
+     parameters = {
+        parameter = {
+           name = shader
+            type = GLuint
+            object-reference = yes
+         }
+        parameter = {
+           name = parameter
+           group = ShaderParameterName
+           }
+        }
+     return-type = Boolean
+     api = { gnoga }
+  }
+   glGetProgramParameter = {
+     parameters = {
+        parameter = {
+           name = progam
+            type = GLuint
+            object-reference = yes
+         }
+        parameter = {
+           name = parameter
+           group = ProgramPropertyARB
+           }
+        }
+     return-type = Boolean
+     api = { gnoga }
+  }
+}

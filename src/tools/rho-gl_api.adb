@@ -1,5 +1,7 @@
 with Ada.Text_IO;
 
+with Tropos.Reader;
+
 with Rho.GL_API.Registry;
 with Rho.GL_API.Generator;
 
@@ -86,6 +88,8 @@ package body Rho.GL_API is
               Path & "/" & Base_File_Name (Binding) & ".ads");
       Set_Output (File);
       Put_Line ("with System;");
+      Put_Line ("with Ada.Numerics.Generic_Real_Arrays;");
+      Put_Line ("private with Ada.Containers.Indefinite_Vectors;");
       New_Line;
       Put_Line
         ("package "
@@ -113,7 +117,7 @@ package body Rho.GL_API is
       Create (File, Out_File,
               Path & "/" & Base_File_Name (Binding) & ".adb");
       Set_Output (File);
-      Put_Line ("with Gnoga.Server.Connection;");
+      Put_Line ("with Gnoga.Gui.Element.Canvas.Context_WebGL.Support;");
       New_Line;
       Put_Line
         ("package body "
@@ -137,11 +141,21 @@ package body Rho.GL_API is
    --------------
 
    procedure Load_API
-     (Document : in out GL_API_Document'Class;
-      Path     : String)
+     (Document           : in out GL_API_Document'Class;
+      Path               : String;
+      Configuration_Path : String)
    is
       Top : Top_Level_Loader;
    begin
+      if Configuration_Path /= "" then
+         declare
+            Config : constant Tropos.Configuration :=
+                       Tropos.Reader.Read_Config (Configuration_Path);
+         begin
+            Document.Overrides := Config.Child ("overrides");
+            Document.Bindings := Config.Child ("bindings");
+         end;
+      end if;
       Document.Loaders.Append (Top);
       Document.Read (Path);
    end Load_API;
