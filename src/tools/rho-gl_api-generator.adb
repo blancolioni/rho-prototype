@@ -3,6 +3,14 @@ with Ada.Text_IO;
 
 package body Rho.GL_API.Generator is
 
+   Check_Errors : constant Boolean := False;
+
+   function Less (Left, Right : GL_Constant_Name) return Boolean
+   is (Left.Value < Right.Value);
+
+   package Constant_Name_Sorting is
+     new GL_Constant_Lists.Generic_Sorting (Less);
+
    function To_Ada_Command_Name
      (Command_Name : String)
       return String;
@@ -114,6 +122,69 @@ package body Rho.GL_API.Generator is
 
       end if;
 
+      if Generate_Body then
+         for Group of Document.Group_List loop
+
+            declare
+               First    : Boolean := True;
+               Skip     : Boolean := False;
+               Ids      : GL_Constant_Lists.List;
+               Prev     : Constant_Value := 0;
+               Name     : constant String := -Group.Name;
+               Ada_Name : constant String := To_Ada_Command_Name (Name);
+            begin
+
+               for Id of Group.Ids loop
+                  if Feature.Enum_Set.Contains (Id) then
+                     Ids.Append
+                       (GL_Constant_Name'
+                          (Ada.Strings.Unbounded.To_Unbounded_String (Id),
+                           (if Document.Constant_Map.Contains (Id)
+                            then Document.Constant_Map.Element (Id)
+                            else 0)));
+                  end if;
+               end loop;
+
+               if not Ids.Is_Empty then
+
+                  Constant_Name_Sorting.Sort (Ids);
+
+                  New_Line;
+
+                  Put ("   " & Ada_Name & "_Values : constant array ("
+                       & Ada_Name & ") of GLuint := ");
+
+                  for Id of Ids loop
+                     if First then
+                        Put_Line ("(");
+                     elsif Id.Value > Prev
+                       and then Id.Value < 2 ** 32
+                     then
+                        Put_Line (",");
+                     else
+                        Skip := True;
+                     end if;
+
+                     if Skip then
+                        Skip := False;
+                     else
+                        Put ("      ");
+                        Put (-Id.Name);
+                        Put (" =>");
+                        Put (Id.Value'Image);
+                        Prev := Id.Value;
+                     end if;
+
+                     First := False;
+                  end loop;
+                  Put_Line (");");
+
+               end if;
+            end;
+         end loop;
+
+      end if;
+
       for Command of Document.Command_List loop
 
          declare
@@ -135,7 +206,7 @@ package body Rho.GL_API.Generator is
             Float_Data_Array_Param : Parameter_Record;
             Have_Group_Mask  : Boolean := False;
             Group_Parameter  : Parameter_Record;
-            --  Group_Mask       : Group_Record;
+            Group_Mask       : Group_Record;
          begin
             if (Feature.Command_Set.Contains (Name)
                 or else Command.API_Override (Binding))
@@ -226,7 +297,7 @@ package body Rho.GL_API.Generator is
                               Put ("_Array");
                               Have_Group_Mask := True;
                               Group_Parameter := Parameter;
-                              --  Group_Mask := Group;
+                              Group_Mask := Group;
                            end if;
                         end;
                      end if;
@@ -251,9 +322,14 @@ package body Rho.GL_API.Generator is
                      Put_Line ("   is");
                   end if;
 
-                  if Have_Float_Data_Array or else Have_Group_Mask then
+                  if Have_Float_Data_Array then
                      Put_Line
                        ("      use Ada.Strings.Unbounded;");
+                  end if;
+
+                  if Check_Errors then
+                     Put_Line
+                       ("      Error : Natural;");
                   end if;
 
                   if Have_Float_Data_Array then
@@ -263,7 +339,10 @@ package body Rho.GL_API.Generator is
 
                   if Have_Group_Mask then
                      Put_Line
-                       ("      Mask_Image : Unbounded_String;");
+                       ("      "
+                        & To_Ada_Parameter_Name
+                          (-Group_Parameter.Parameter_Name)
+                        & "_Uint : GLuint := 0;");
                   end if;
 
                   Put_Line ("   begin");
@@ -279,31 +358,43 @@ package body Rho.GL_API.Generator is
                      Put_Line
                        ("         end if;");
                      Put_Line
-                       ("         Data_Image := Data_Image & X'Image;");
+                       ("         Data_Image := Data_Image & "
+                        & "Support.Image (X);");
                      Put_Line
                        ("      end loop;");
                   end if;
 
                   if Have_Group_Mask then
-                     Put_Line
-                       ("      for X of " & (-Group_Parameter.Parameter_Name)
-                        & " loop");
-                     Put_Line
-                       ("         if Mask_Image /= """" then");
-                     Put_Line
-                       ("            Mask_Image := Mask_Image & ""|"";");
-                     Put_Line
-                       ("         end if;");
-                     Put_Line
-                       ("         Mask_Image := Mask_Image & "
-                        & "Context.GLEnum_Property (X'Image);");
-                     Put_Line
-                       ("      end loop;");
+                     declare
+                        Mask_Name     : constant String := -Group_Mask.Name;
+                        Ada_Mask_Name : constant String :=
+                                          To_Ada_Command_Name (Mask_Name);
+                        Mask_Acc_Name : constant String :=
+                                          To_Ada_Parameter_Name
+                                            (-Group_Parameter.Parameter_Name)
+                                          & "_Uint";
+                     begin
+                        Put_Line
+                          ("      for X of "
+                           & To_Ada_Parameter_Name
+                             (-Group_Parameter.Parameter_Name)
+                           & " loop");
+                        Put_Line
+                          ("         " & Mask_Acc_Name & " := "
+                           & Mask_Acc_Name & " or "
+                           & Ada_Mask_Name & "_Values (X);");
+                        Put_Line
+                          ("      end loop;");
+                     end;
                   end if;
 
                   Put ("      ");
                   if not Is_Procedure then
-                     Put ("return ");
+                     Put_Line ("declare");
+                     Put_Line ("         Result : constant "
+                               & Return_Type & " := ");
+                     Put ("           ");
+
                      if Command.Creates_Object then
                         Put ("Support.Indexed_Javascript_Object (Context,");
                      else
@@ -325,6 +416,22 @@ package body Rho.GL_API.Generator is
                                             -Parameter.Type_Name;
                         Parameter_Group : constant String :=
                                             -Parameter.Group_Name;
+                        Get_GLEnum_Property : constant Boolean :=
+                                                Parameter_Group /= ""
+                                       and then Parameter_Group /= "ColorF"
+                                       and then Parameter_Type /= "GLfloat"
+                                       and then Parameter_Type /= "GLint"
+                                       and then Parameter_Type /= "GLintptr"
+                                       and then Parameter_Type /= "GLuint";
+                        String_Constant     : constant Boolean :=
+                                             Parameter_Type = "String";
+                        Float_Argument      : constant Boolean :=
+                                                Parameter_Type = "GLfloat";
+                        Have_Group          : constant Boolean :=
+                                                Parameter_Group /= ""
+                                       and then Parameter_Group /= "Texture"
+                                       and then Document.Group_Map.Contains
+                                                          (Parameter_Group);
                      begin
                         if First_Parameter then
                            First_Parameter := False;
@@ -341,33 +448,39 @@ package body Rho.GL_API.Generator is
                           and then Parameter.Parameter_Name
                             = Group_Parameter.Parameter_Name
                         then
-                           Put ("To_String (Mask_Image)");
+                           Put (To_Ada_Parameter_Name
+                                (-Group_Parameter.Parameter_Name)
+                                & "_Uint'Image");
                         else
-                           if Parameter_Group /= ""
-                             and then Parameter_Group /= "ColorF"
-                             and then Parameter_Type /= "GLfloat"
-                           then
-                              Put ("Context.GLEnum_Property (");
-                           end if;
-                           if Parameter_Type = "String" then
+                           if Have_Group then
+                              Put (To_Ada_Command_Name (Parameter_Group)
+                                   & "_Values (");
+                           elsif Get_GLEnum_Property then
+                              Put ("GLEnum_Property (Context, ");
+                           elsif String_Constant then
                               Put ("""'"" & Escape_Quotes (");
                            elsif Parameter.Object_Reference then
                               Put ("Support.Indexed_Object_Reference "
                                    & "(Context, ");
+                           elsif Float_Argument then
+                              Put ("Support.Image (");
                            end if;
+
                            Put (To_Ada_Parameter_Name (Parameter_Name));
-                           if Parameter_Type = "String" then
+
+                           if String_Constant then
                               Put (") & ""'""");
-                           elsif Parameter.Object_Reference then
-                              Put (")");
-                           else
-                              Put ("'Image");
-                           end if;
-                           if Parameter_Group /= ""
-                             and then Parameter_Group /= "ColorF"
-                             and then Parameter_Type /= "GLfloat"
+                           elsif Parameter.Object_Reference
+                             or else Float_Argument
                            then
                               Put (")");
+                           elsif Have_Group then
+                              Put (")'Image");
+                           else
+                              Put ("'Image");
+                              if Get_GLEnum_Property then
+                                 Put (")");
+                              end if;
                            end if;
                         end if;
                      end;
@@ -379,6 +492,25 @@ package body Rho.GL_API.Generator is
                      Put (")");
                   end if;
                   Put_Line (";");
+                  if not Is_Procedure then
+                     Put_Line ("      begin");
+                  end if;
+
+                  if Check_Errors then
+                     Put_Line ("      Error := Natural'Value "
+                               & "(Context.Execute ("
+                               & """getError()""));");
+                     Put_Line ("      if Error /= 0 then");
+                     Put_Line ("         raise Program_Error with """
+                               & Name & ": error"" & Error'Image;");
+                     Put_Line ("      end if;");
+                  end if;
+
+                  if not Is_Procedure then
+                     Put_Line ("      return Result;");
+                     Put_Line ("   end;");
+                  end if;
+
                   Put_Line ("   end " & Ada_Name & ";");
                else
                   Put_Line (";");
@@ -404,6 +536,10 @@ package body Rho.GL_API.Generator is
               ("      record");
             Put_Line
               ("         Web_Object_Ids : Web_Object_Id_Vectors.Vector;");
+            Put_Line
+              ("         View_Width     : Natural;");
+            Put_Line
+              ("         View_Height    : Natural;");
             Put_Line
               ("      end record;");
             New_Line;
@@ -446,19 +582,13 @@ package body Rho.GL_API.Generator is
    -----------------------
 
    procedure Generate_GL_Types
-     (Document    : GL_API_Document'Class;
-      Binding     : API_Binding_Language;
-      Feature_Key : String)
+     (Document      : GL_API_Document'Class;
+      Binding       : API_Binding_Language;
+      Feature_Key   : String)
    is
       use Ada.Text_IO;
 
       Feature : Require_Record renames Document.Feature_Map (Feature_Key);
-
-      function Less (Left, Right : GL_Constant_Name) return Boolean
-      is (Left.Value < Right.Value);
-
-      package Constant_Name_Sorting is
-        new GL_Constant_Lists.Generic_Sorting (Less);
 
    begin
       Put_Line ("   type GLuchar is mod 2 ** 8;");
@@ -519,6 +649,7 @@ package body Rho.GL_API.Generator is
                Constant_Name_Sorting.Sort (Ids);
 
                New_Line;
+
                Put ("   type "
                     & Ada_Name
                     & " is");
@@ -640,6 +771,9 @@ package body Rho.GL_API.Generator is
             Upper := Is_Upper (Ch);
          end if;
       end loop;
+      if Result (Length) = 'f' then
+         Length := Length - 1;
+      end if;
       return Result (1 .. Length);
    end To_Ada_Command_Name;
 
@@ -667,18 +801,18 @@ package body Rho.GL_API.Generator is
      (Command_Name : String)
       return String
    is
+      First : Positive := Command_Name'First;
+      Last  : Positive := Command_Name'Last;
    begin
-      if Command_Name
-        (Command_Name'First .. Command_Name'First + 1)
-        = "gl"
-      then
-         return Ada.Characters.Handling.To_Lower
-           (Command_Name (Command_Name'First + 2))
-           & Command_Name
-           (Command_Name'First + 3 .. Command_Name'Last);
-      else
-         return Command_Name;
+      if Command_Name (First .. First + 1) = "gl" then
+         First := First + 2;
       end if;
+      if Command_Name (Last) = 'f' then
+         Last := Last - 1;
+      end if;
+
+      return Ada.Characters.Handling.To_Lower (Command_Name (First))
+        & Command_Name (First + 1 .. Last);
    end To_WebGL_Command_Name;
 
 end Rho.GL_API.Generator;

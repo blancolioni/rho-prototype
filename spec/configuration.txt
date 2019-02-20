@@ -13,6 +13,20 @@ overrides = {
       }
     }
     
+    glBindBuffer = {
+      parameters = {
+         parameter = {
+            name = target
+            group = BufferTargetARB
+         }
+         parameter = {
+            name = buffer
+            type = GLuint
+            object-reference = yes
+         }
+      }
+    }
+    
     glGetUniformLocation = {
       parameters = {
          parameter = {
