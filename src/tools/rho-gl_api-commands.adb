@@ -228,15 +228,16 @@ package body Rho.GL_API.Commands is
          declare
             Command : Command_Record :=
                         Command_Record'
-                          (Name           => +Binding.Config_Name,
-                           Return_Type    =>
+                          (Name            => +Binding.Config_Name,
+                           Return_Type     =>
                              +(Binding.Get ("return-type", "")),
-                           Return_Group   =>
+                           Return_Group    =>
                              +(Binding.Get ("return-group", "")),
-                           Parameters     => <>,
-                           GLX_Type       => <>,
-                           Opcode         => 0,
-                           API_Override   => <>,
+                           Parameters      => <>,
+                           GLX_Type        => <>,
+                           Opcode          => 0,
+                           API_Override    => <>,
+                           Have_Data_Array => <>,
                            Creates_Object => Binding.Get ("creates-object"));
          begin
             for Language in API_Binding_Language loop
@@ -258,14 +259,17 @@ package body Rho.GL_API.Commands is
                        +(Parameter_Config.Get ("name", "")),
                      Byte_Offset      =>
                        Parameter_Config.Get ("byte-offset"),
-                     Float_Data_Array =>
-                       Parameter_Config.Get ("float-data-array"),
+                     Data_Array =>
+                       Parameter_Config.Get ("data-array"),
                      String_Array     =>
                        Parameter_Config.Get ("string-array"),
                      Writeable_Array  =>
                        Parameter_Config.Get ("writeable-array"),
                      Object_Reference =>
                        Parameter_Config.Get ("object-reference")));
+               Command.Have_Data_Array :=
+                 Command.Have_Data_Array or else
+                 Command.Parameters.Last_Element.Data_Array;
             end loop;
             Document.Command_List.Append (Command);
 
@@ -299,6 +303,7 @@ package body Rho.GL_API.Commands is
                             GLX_Type       => <>,
                             Opcode         => 0,
                             API_Override   => <>,
+                            Have_Data_Array => <>,
                             Creates_Object =>
                               Override.Get ("creates-object")
                               or else Command_Name = "glCreateShader"
@@ -315,14 +320,17 @@ package body Rho.GL_API.Commands is
                        +(Parameter_Config.Get ("name", "")),
                      Byte_Offset     =>
                        Parameter_Config.Get ("byte-offset"),
-                     Float_Data_Array =>
-                       Parameter_Config.Get ("float-data-array"),
+                     Data_Array =>
+                       Parameter_Config.Get ("data-array"),
                      String_Array     =>
                        Parameter_Config.Get ("string-array"),
                      Writeable_Array =>
                        Parameter_Config.Get ("writeable-array"),
                      Object_Reference =>
                        Parameter_Config.Get ("object-reference")));
+               Command.Have_Data_Array :=
+                 Command.Have_Data_Array or else
+                 Command.Parameters.Last_Element.Data_Array;
             end loop;
             Document.Command_List.Append (Command);
          end;
@@ -381,7 +389,8 @@ package body Rho.GL_API.Commands is
       use type Ada.Strings.Unbounded.Unbounded_String;
    begin
       if Text = "const void *" then
-         Document.Current_Parameter.Float_Data_Array := True;
+         Document.Current_Parameter.Data_Array := True;
+         Document.Current_Command.Have_Data_Array := True;
       elsif Text = "void *" or else Text = "void **" then
          Document.Current_Parameter.Writeable_Array := True;
       elsif Ada.Strings.Fixed.Trim (Text, Ada.Strings.Both) = "*"

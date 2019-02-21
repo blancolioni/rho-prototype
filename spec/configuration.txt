@@ -27,6 +27,20 @@ overrides = {
       }
     }
     
+    glBindTexture = {
+      parameters = {
+         parameter = {
+            name = target
+            group = TextureTarget
+         }
+         parameter = {
+            name = texture
+            type = GLuint
+            object-reference = yes
+         }
+      }
+    }
+    
     glGetUniformLocation = {
       parameters = {
          parameter = {
@@ -85,10 +99,37 @@ overrides = {
           }
         }
       }
+    glDrawElements = {
+      parameters = {
+          parameter = {
+            name = mode
+            group = PrimitiveType
+            }
+          parameter = {
+            name = count
+            type = GLsizei
+            }
+          parameter = {
+            name = elementType
+            group = DrawElementsType
+            }
+          parameter = {
+            name = offset
+            byte-offset = yes
+            }
+          }
+    }
 }
 
 bindings = {
    glCreateBuffer = {
+     parameters = {
+     }
+     return-type = GLuint
+     creates-object = yes
+     api = { gnoga }
+   }
+   glCreateTexture = {
      parameters = {
      }
      return-type = GLuint

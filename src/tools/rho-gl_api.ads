@@ -92,7 +92,7 @@ private
          Type_Name        : Ada.Strings.Unbounded.Unbounded_String;
          Parameter_Name   : Ada.Strings.Unbounded.Unbounded_String;
          Byte_Offset      : Boolean := False;
-         Float_Data_Array : Boolean := False;
+         Data_Array       : Boolean := False;
          String_Array     : Boolean := False;
          Writeable_Array  : Boolean := False;
          Object_Reference : Boolean := False;
@@ -105,14 +105,15 @@ private
 
    type Command_Record is
       record
-         Name           : Ada.Strings.Unbounded.Unbounded_String;
-         Return_Type    : Ada.Strings.Unbounded.Unbounded_String;
-         Return_Group   : Ada.Strings.Unbounded.Unbounded_String;
-         Parameters     : Parameter_Lists.List;
-         GLX_Type       : Ada.Strings.Unbounded.Unbounded_String;
-         Opcode         : Natural := 0;
-         Creates_Object : Boolean := False;
-         API_Override   : API_Flags := (others => False);
+         Name            : Ada.Strings.Unbounded.Unbounded_String;
+         Return_Type     : Ada.Strings.Unbounded.Unbounded_String;
+         Return_Group    : Ada.Strings.Unbounded.Unbounded_String;
+         Parameters      : Parameter_Lists.List;
+         GLX_Type        : Ada.Strings.Unbounded.Unbounded_String;
+         Opcode          : Natural := 0;
+         Creates_Object  : Boolean := False;
+         API_Override    : API_Flags := (others => False);
+         Have_Data_Array : Boolean := False;
       end record;
 
    package Command_Lists is

@@ -36,17 +36,314 @@ package body Rho.GL_API.Generator is
       use Ada.Text_IO;
       Feature : Require_Record renames Document.Feature_Map (Feature_Key);
 
+      procedure Put_Command
+        (Command                : Command_Record;
+         Data_Array_Type_Name   : String;
+         Data_Array_Target_Name : String);
+
       procedure Put_Parameters
-        (Parameters                 : Parameter_Lists.List;
-         Mask_Parameter_Name        : String);
+        (Parameters             : Parameter_Lists.List;
+         Data_Array_Target_Name : String;
+         Mask_Parameter_Name    : String);
+
+      procedure Put_Command
+        (Command                : Command_Record;
+         Data_Array_Type_Name   : String;
+         Data_Array_Target_Name : String)
+      is
+         use type Ada.Strings.Unbounded.Unbounded_String;
+         Name : constant String := -Command.Name;
+         Ada_Name : constant String :=
+                      (if Document.Group_Map.Contains
+                         (Name (Name'First + 2 .. Name'Last))
+                       then "Set_" & To_Ada_Command_Name (Name)
+                       else To_Ada_Command_Name (Name));
+         Return_Type : constant String :=
+                         (if Command.Return_Group = ""
+                          then -Command.Return_Type
+                          else -Command.Return_Group);
+         Is_Function : constant Boolean := Return_Type /= "";
+         First_Parameter : Boolean := True;
+         Have_Data_Array  : constant Boolean := Command.Have_Data_Array;
+         Data_Array_Param : Parameter_Record;
+         Have_Group_Mask  : Boolean := False;
+         Group_Parameter  : Parameter_Record;
+         Group_Mask       : Group_Record;
+      begin
+         if (Feature.Command_Set.Contains (Name)
+             or else Command.API_Override (Binding))
+           and then (not Is_Function
+                     or else Return_Type = "GLint"
+                     or else Return_Type = "GLuint"
+                     or else Return_Type = "Boolean")
+           and then Ada_Name /= "Read_Pixels"
+           and then Ada_Name /= "Get_Vertex_Attrib_Pointerv"
+         then
+
+            if Generate_Body then
+               declare
+                  S : constant String (1 .. Name'Length + 6) :=
+                        (others => '-');
+               begin
+                  Put_Line ("   " & S);
+                  Put_Line ("   -- " & Ada_Name & " --");
+                  Put_Line ("   " & S);
+                  New_Line;
+               end;
+            end if;
+
+            if Is_Function then
+               Put ("   function ");
+            else
+               Put ("   procedure ");
+            end if;
+
+            Put (Ada_Name);
+
+            if Binding = Gnoga then
+               New_Line;
+               Put ("     (Context : in out Context_WebGL_Type'Class");
+               First_Parameter := False;
+            end if;
+
+            for Parameter of Command.Parameters loop
+               declare
+                  Parameter_Name  : constant String :=
+                                      -Parameter.Parameter_Name;
+                  Parameter_Type  : constant String :=
+                                      -Parameter.Type_Name;
+                  Parameter_Group : constant String :=
+                                      -Parameter.Group_Name;
+               begin
+
+                  if Parameter.Data_Array then
+                     Data_Array_Param := Parameter;
+                  end if;
+
+                  if First_Parameter then
+                     New_Line;
+                     Put ("     (");
+                     First_Parameter := False;
+                  else
+                     Put_Line (";");
+                     Put ("      ");
+                  end if;
+                  Put
+                    (Ada.Characters.Handling.To_Upper
+                       (Parameter_Name (Parameter_Name'First)));
+                  Put (Parameter_Name (Parameter_Name'First + 1
+                       .. Parameter_Name'Last));
+                  Put (" : ");
+                  if Parameter.Data_Array then
+                     Put (Data_Array_Type_Name);
+                  elsif Parameter.Byte_Offset then
+                     Put ("Natural");
+                  elsif Parameter.Writeable_Array then
+                     Put ("GLvoidptr");
+                  elsif Parameter_Group = "Boolean" then
+                     Put (Parameter_Group);
+                  elsif Parameter_Group = ""
+                    or else not Document.Group_Map.Contains
+                      (Parameter_Group)
+                  then
+                     Put (Parameter_Type);
+                  else
+                     declare
+                        Group : Group_Record renames
+                                  Document.Group_List
+                                    (Document.Group_Map.Element
+                                       (Parameter_Group));
+                     begin
+                        Put (To_Ada_Command_Name (Parameter_Group));
+                        if Group.Bit_Mask then
+                           Put ("_Array");
+                           Have_Group_Mask := True;
+                           Group_Parameter := Parameter;
+                           Group_Mask := Group;
+                        end if;
+                     end;
+                  end if;
+               end;
+            end loop;
+
+            if not First_Parameter then
+               Put (")");
+            end if;
+
+            if Is_Function then
+               New_Line;
+               Put ("     return ");
+               Put (To_Ada_Command_Name (Return_Type));
+            end if;
+
+            if Generate_Body then
+               if First_Parameter then
+                  Put_Line (" is");
+               else
+                  New_Line;
+                  Put_Line ("   is");
+               end if;
+
+               if Have_Data_Array then
+                  Put_Line
+                    ("      use Ada.Strings.Unbounded;");
+               end if;
+
+               if Check_Errors then
+                  Put_Line
+                    ("      Error : Natural;");
+               end if;
+
+               if Have_Data_Array then
+                  Put_Line
+                    ("      Data_Image : Unbounded_String;");
+               end if;
+
+               if Have_Group_Mask then
+                  Put_Line
+                    ("      "
+                     & To_Ada_Parameter_Name
+                       (-Group_Parameter.Parameter_Name)
+                     & "_Uint : GLuint := 0;");
+               end if;
+
+               Put_Line ("   begin");
+
+               if Have_Data_Array then
+                  Put_Line
+                    ("      for X of "
+                     & (-Data_Array_Param.Parameter_Name)
+                     & " loop");
+                  Put_Line
+                    ("         if Data_Image /= """" then");
+                  Put_Line
+                    ("            Data_Image := Data_Image & "","";");
+                  Put_Line
+                    ("         end if;");
+                  Put_Line
+                    ("         Data_Image := Data_Image & "
+                     & "X'Image;");
+                  Put_Line
+                    ("      end loop;");
+               end if;
+
+               if Have_Group_Mask then
+                  declare
+                     Mask_Name     : constant String := -Group_Mask.Name;
+                     Ada_Mask_Name : constant String :=
+                                       To_Ada_Command_Name (Mask_Name);
+                     Mask_Acc_Name : constant String :=
+                                       To_Ada_Parameter_Name
+                                         (-Group_Parameter.Parameter_Name)
+                                       & "_Uint";
+                  begin
+                     Put_Line
+                       ("      for X of "
+                        & To_Ada_Parameter_Name
+                          (-Group_Parameter.Parameter_Name)
+                        & " loop");
+                     Put_Line
+                       ("         " & Mask_Acc_Name & " := "
+                        & Mask_Acc_Name & " or "
+                        & Ada_Mask_Name & "_Values (X);");
+                     Put_Line
+                       ("      end loop;");
+                  end;
+               end if;
+
+               Put_Line ("      if Context.Rendering then");
+               if Is_Function then
+                  Put_Line
+                    ("         raise Constraint_Error with");
+                  Put_Line
+                    ("            ""Illegal call to "
+                     & Name & " during render"";");
+               else
+                  Put ("         ");
+                  Put_Line ("Context.Render_Script.Append (");
+                  Put ("           ");
+                  Put_Line ("""gl." & To_WebGL_Command_Name (Name)
+                            & "(""");
+                  Put_Parameters
+                    (Command.Parameters,
+                     Data_Array_Target_Name,
+                     (if Have_Group_Mask
+                      then -Group_Parameter.Parameter_Name
+                      else ""));
+                  Put ("           & "")""");
+                  Put_Line (");");
+               end if;
+
+               Put_Line ("      else");
+
+               if Is_Function then
+                  Put_Line ("         declare");
+                  Put_Line ("            Result : constant "
+                            & Return_Type & " := ");
+                  Put ("           ");
+
+                  if Command.Creates_Object then
+                     Put ("Support.Indexed_Javascript_Object (Context,");
+                  else
+                     Put (Return_Type & "'Value (Context.Execute (");
+                  end if;
+               else
+                  Put ("Context.Execute (");
+               end if;
+               New_Line;
+               Put_Line
+                 ("        """ & To_WebGL_Command_Name (Name)
+                  & "(""");
+               Put_Parameters
+                 (Command.Parameters,
+                  Data_Array_Target_Name,
+                  (if Have_Group_Mask
+                   then -Group_Parameter.Parameter_Name
+                   else ""));
+               Put ("        & "")"")");
+               if Is_Function
+                 and then not Command.Creates_Object
+               then
+                  Put (")");
+               end if;
+               Put_Line (";");
+               if Is_Function then
+                  Put_Line ("      begin");
+               end if;
+
+               if Check_Errors then
+                  Put_Line ("      Error := Natural'Value "
+                            & "(Context.Execute ("
+                            & """getError()""));");
+                  Put_Line ("      if Error /= 0 then");
+                  Put_Line ("         raise Program_Error with """
+                            & Name & ": error"" & Error'Image;");
+                  Put_Line ("      end if;");
+               end if;
+
+               if Is_Function then
+                  Put_Line ("      return Result;");
+                  Put_Line ("   end;");
+               end if;
+
+               Put_Line ("      end if;");
+
+               Put_Line ("   end " & Ada_Name & ";");
+            else
+               Put_Line (";");
+            end if;
+            New_Line;
+         end if;
+      end Put_Command;
 
       --------------------
       -- Put_Parameters --
       --------------------
 
       procedure Put_Parameters
-        (Parameters                 : Parameter_Lists.List;
-         Mask_Parameter_Name        : String)
+        (Parameters             : Parameter_Lists.List;
+         Data_Array_Target_Name : String;
+         Mask_Parameter_Name    : String)
       is
          use Ada.Strings.Unbounded;
          First_Parameter : Boolean := True;
@@ -83,9 +380,9 @@ package body Rho.GL_API.Generator is
                end if;
                Put ("         & ");
 
-               if Parameter.Float_Data_Array then
+               if Parameter.Data_Array then
                   Put
-                    ("""new Float32Array(["" & "
+                    ("""new " & Data_Array_Target_Name & "(["" & "
                      & "To_String (Data_Image) & ""])""");
                elsif Parameter.Parameter_Name = Mask_Parameter_Name then
                   Put (To_Ada_Parameter_Name
@@ -313,289 +610,13 @@ package body Rho.GL_API.Generator is
 
       for Command of Document.Command_List loop
 
-         declare
-            use type Ada.Strings.Unbounded.Unbounded_String;
-            Name : constant String := -Command.Name;
-            Ada_Name : constant String :=
-                         (if Document.Group_Map.Contains
-                            (Name (Name'First + 2 .. Name'Last))
-                          then "Set_" & To_Ada_Command_Name (Name)
-                          else To_Ada_Command_Name (Name));
-            Return_Type : constant String :=
-                            (if Command.Return_Group = ""
-                             then -Command.Return_Type
-                             else -Command.Return_Group);
-            Is_Function : constant Boolean := Return_Type /= "";
-            First_Parameter : Boolean := True;
-            Have_Float_Data_Array  : Boolean := False;
-            Float_Data_Array_Param : Parameter_Record;
-            Have_Group_Mask  : Boolean := False;
-            Group_Parameter  : Parameter_Record;
-            Group_Mask       : Group_Record;
-         begin
-            if (Feature.Command_Set.Contains (Name)
-                or else Command.API_Override (Binding))
-              and then (not Is_Function
-                        or else Return_Type = "GLint"
-                        or else Return_Type = "GLuint"
-                        or else Return_Type = "Boolean")
-              and then Ada_Name /= "Read_Pixels"
-              and then Ada_Name /= "Get_Vertex_Attrib_Pointerv"
-            then
-
-               if Generate_Body then
-                  declare
-                     S : constant String (1 .. Name'Length + 6) :=
-                           (others => '-');
-                  begin
-                     Put_Line ("   " & S);
-                     Put_Line ("   -- " & Ada_Name & " --");
-                     Put_Line ("   " & S);
-                     New_Line;
-                  end;
-               end if;
-
-               if Is_Function then
-                  Put ("   function ");
-               else
-                  Put ("   procedure ");
-               end if;
-
-               Put (Ada_Name);
-
-               if Binding = Gnoga then
-                  New_Line;
-                  Put ("     (Context : in out Context_WebGL_Type'Class");
-                  First_Parameter := False;
-               end if;
-               for Parameter of Command.Parameters loop
-                  declare
-                     Parameter_Name  : constant String :=
-                                         -Parameter.Parameter_Name;
-                     Parameter_Type  : constant String :=
-                                         -Parameter.Type_Name;
-                     Parameter_Group : constant String :=
-                                         -Parameter.Group_Name;
-                  begin
-
-                     if Parameter.Float_Data_Array then
-                        Have_Float_Data_Array := True;
-                        Float_Data_Array_Param := Parameter;
-                     end if;
-
-                     if First_Parameter then
-                        New_Line;
-                        Put ("     (");
-                        First_Parameter := False;
-                     else
-                        Put_Line (";");
-                        Put ("      ");
-                     end if;
-                     Put
-                       (Ada.Characters.Handling.To_Upper
-                          (Parameter_Name (Parameter_Name'First)));
-                     Put (Parameter_Name (Parameter_Name'First + 1
-                          .. Parameter_Name'Last));
-                     Put (" : ");
-                     if Parameter.Float_Data_Array then
-                        Put ("Float_Array");
-                     elsif Parameter.Byte_Offset then
-                        Put ("Natural");
-                     elsif Parameter.Writeable_Array then
-                        Put ("GLvoidptr");
-                     elsif Parameter_Group = "Boolean" then
-                        Put (Parameter_Group);
-                     elsif Parameter_Group = ""
-                       or else not Document.Group_Map.Contains
-                         (Parameter_Group)
-                     then
-                        Put (Parameter_Type);
-                     else
-                        declare
-                           Group : Group_Record renames
-                                     Document.Group_List
-                                       (Document.Group_Map.Element
-                                          (Parameter_Group));
-                        begin
-                           Put (To_Ada_Command_Name (Parameter_Group));
-                           if Group.Bit_Mask then
-                              Put ("_Array");
-                              Have_Group_Mask := True;
-                              Group_Parameter := Parameter;
-                              Group_Mask := Group;
-                           end if;
-                        end;
-                     end if;
-                  end;
-               end loop;
-
-               if not First_Parameter then
-                  Put (")");
-               end if;
-
-               if Is_Function then
-                  New_Line;
-                  Put ("     return ");
-                  Put (To_Ada_Command_Name (Return_Type));
-               end if;
-
-               if Generate_Body then
-                  if First_Parameter then
-                     Put_Line (" is");
-                  else
-                     New_Line;
-                     Put_Line ("   is");
-                  end if;
-
-                  if Have_Float_Data_Array then
-                     Put_Line
-                       ("      use Ada.Strings.Unbounded;");
-                  end if;
-
-                  if Check_Errors then
-                     Put_Line
-                       ("      Error : Natural;");
-                  end if;
-
-                  if Have_Float_Data_Array then
-                     Put_Line
-                       ("      Data_Image : Unbounded_String;");
-                  end if;
-
-                  if Have_Group_Mask then
-                     Put_Line
-                       ("      "
-                        & To_Ada_Parameter_Name
-                          (-Group_Parameter.Parameter_Name)
-                        & "_Uint : GLuint := 0;");
-                  end if;
-
-                  Put_Line ("   begin");
-
-                  if Have_Float_Data_Array then
-                     Put_Line
-                       ("      for X of "
-                        & (-Float_Data_Array_Param.Parameter_Name)
-                        & " loop");
-                     Put_Line
-                       ("         if Data_Image /= """" then");
-                     Put_Line
-                       ("            Data_Image := Data_Image & "","";");
-                     Put_Line
-                       ("         end if;");
-                     Put_Line
-                       ("         Data_Image := Data_Image & "
-                        & "Support.Image (X);");
-                     Put_Line
-                       ("      end loop;");
-                  end if;
-
-                  if Have_Group_Mask then
-                     declare
-                        Mask_Name     : constant String := -Group_Mask.Name;
-                        Ada_Mask_Name : constant String :=
-                                          To_Ada_Command_Name (Mask_Name);
-                        Mask_Acc_Name : constant String :=
-                                          To_Ada_Parameter_Name
-                                            (-Group_Parameter.Parameter_Name)
-                                          & "_Uint";
-                     begin
-                        Put_Line
-                          ("      for X of "
-                           & To_Ada_Parameter_Name
-                             (-Group_Parameter.Parameter_Name)
-                           & " loop");
-                        Put_Line
-                          ("         " & Mask_Acc_Name & " := "
-                           & Mask_Acc_Name & " or "
-                           & Ada_Mask_Name & "_Values (X);");
-                        Put_Line
-                          ("      end loop;");
-                     end;
-                  end if;
-
-                  Put_Line ("      if Context.Rendering then");
-                  if Is_Function then
-                     Put_Line
-                       ("         raise Constraint_Error with");
-                     Put_Line
-                       ("            ""Illegal call to "
-                        & Name & " during render"";");
-                  else
-                     Put ("         ");
-                     Put_Line ("Context.Render_Script.Append (");
-                     Put ("           ");
-                     Put_Line ("""gl." & To_WebGL_Command_Name (Name)
-                               & "(""");
-                     Put_Parameters
-                       (Command.Parameters,
-                        (if Have_Group_Mask
-                         then -Group_Parameter.Parameter_Name
-                         else ""));
-                     Put ("           & "")""");
-                     Put_Line (");");
-                  end if;
-
-                  Put_Line ("      else");
-
-                  if Is_Function then
-                     Put_Line ("         declare");
-                     Put_Line ("            Result : constant "
-                               & Return_Type & " := ");
-                     Put ("           ");
-
-                     if Command.Creates_Object then
-                        Put ("Support.Indexed_Javascript_Object (Context,");
-                     else
-                        Put (Return_Type & "'Value (Context.Execute (");
-                     end if;
-                  else
-                     Put ("Context.Execute (");
-                  end if;
-                  New_Line;
-                  Put_Line
-                    ("        """ & To_WebGL_Command_Name (Name)
-                     & "(""");
-                  Put_Parameters
-                    (Command.Parameters,
-                     (if Have_Group_Mask
-                      then -Group_Parameter.Parameter_Name
-                      else ""));
-                  Put ("        & "")"")");
-                  if Is_Function
-                    and then not Command.Creates_Object
-                  then
-                     Put (")");
-                  end if;
-                  Put_Line (";");
-                  if Is_Function then
-                     Put_Line ("      begin");
-                  end if;
-
-                  if Check_Errors then
-                     Put_Line ("      Error := Natural'Value "
-                               & "(Context.Execute ("
-                               & """getError()""));");
-                     Put_Line ("      if Error /= 0 then");
-                     Put_Line ("         raise Program_Error with """
-                               & Name & ": error"" & Error'Image;");
-                     Put_Line ("      end if;");
-                  end if;
-
-                  if Is_Function then
-                     Put_Line ("      return Result;");
-                     Put_Line ("   end;");
-                  end if;
-
-                  Put_Line ("      end if;");
-
-                  Put_Line ("   end " & Ada_Name & ";");
-               else
-                  Put_Line (";");
-               end if;
-               New_Line;
-            end if;
-         end;
+         if Command.Have_Data_Array then
+            Put_Command (Command, "Float_Array", "Float32Array");
+            Put_Command (Command, "Uint16_Array", "Uint16Array");
+            Put_Command (Command, "Uint8_Array", "Uint8Array");
+         else
+            Put_Command (Command, "", "");
+         end if;
 
       end loop;
 
@@ -675,6 +696,10 @@ package body Rho.GL_API.Generator is
    begin
       Put_Line ("   type GLuchar is mod 2 ** 8;");
       Put_Line ("   type GLchar is range -128 .. 127;");
+      Put_Line ("   type GLint8 is range -2 ** 15 .. 2 ** 15 - 1;");
+      Put_Line ("   type GLuint8 is mod 2 ** 16;");
+      Put_Line ("   type GLint16 is range -2 ** 15 .. 2 ** 15 - 1;");
+      Put_Line ("   type GLuint16 is mod 2 ** 16;");
       Put_Line ("   type GLint is range -2 ** 31 .. 2 ** 31 - 1;");
       Put_Line ("   type GLuint is mod 2 **32;");
       Put_Line ("   type GLenum is new GLint;");
@@ -686,6 +711,11 @@ package body Rho.GL_API.Generator is
 
       Put_Line ("   type Float_Array is "
                 & "array (Positive range <>) of GLfloat;");
+      Put_Line ("   type Uint16_Array is "
+                & "array (Positive range <>) of GLuint16;");
+      Put_Line ("   type Uint8_Array is "
+                & "array (Positive range <>) of GLuint8;");
+      Put_Line ("   subtype Element_Array is Uint16_Array;");
       Put_Line ("   type CheckedInt32 is "
                 & "array (Positive range <>) of GLint;");
       Put_Line ("   type ColorF is new GLfloat;");
