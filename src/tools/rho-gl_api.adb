@@ -125,6 +125,7 @@ package body Rho.GL_API is
 
       New_Line;
       Put_Line ("   pragma Style_Checks (Off);");
+      Put_Line ("   pragma Warnings (Off);");
 
       Generator.Generate_GL_Commands (Document, True, Binding, Key);
 
