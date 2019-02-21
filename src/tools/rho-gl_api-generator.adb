@@ -172,6 +172,13 @@ package body Rho.GL_API.Generator is
             Put_Line ("      X, Y, Z : GLfloat);");
             New_Line;
 
+            Put_Line ("   procedure Rotate");
+            Put_Line ("     (Context : in out Context_WebGL_Type'Class;");
+            Put_Line ("      Matrix  : in out Matrix_4;");
+            Put_Line ("      Angle   : GLfloat;");
+            Put_Line ("      X, Y, Z : GLfloat);");
+            New_Line;
+
             Put_Line ("   procedure Uniform_Matrix");
             Put_Line ("     (Context  : in out Context_WebGL_Type'Class;");
             Put_Line ("      Location : GLuint;");
@@ -222,6 +229,14 @@ package body Rho.GL_API.Generator is
          Put_Line ("      Matrix  : in out Matrix_4;");
          Put_Line ("      X, Y, Z : GLfloat)");
          Put_Line ("   renames Support.Translate;");
+         New_Line;
+
+         Put_Line ("   procedure Rotate");
+         Put_Line ("     (Context : in out Context_WebGL_Type'Class;");
+         Put_Line ("      Matrix  : in out Matrix_4;");
+         Put_Line ("      Angle   : GLfloat;");
+         Put_Line ("      X, Y, Z : GLfloat)");
+         Put_Line ("   renames Support.Rotate;");
          New_Line;
 
          Put_Line ("   procedure Uniform_Matrix");
@@ -685,8 +700,16 @@ package body Rho.GL_API.Generator is
       Put_Line ("     Matrices.Real_Matrix (1 .. 4, 1 .. 4);");
       New_Line;
 
+      Put_Line ("   subtype Matrix_3 is");
+      Put_Line ("     Matrices.Real_Matrix (1 .. 3, 1 .. 3);");
+      New_Line;
+
       Put_Line ("   subtype Vector_4 is");
       Put_Line ("     Matrices.Real_Vector (1 .. 4);");
+      New_Line;
+
+      Put_Line ("   subtype Vector_3 is");
+      Put_Line ("     Matrices.Real_Vector (1 .. 3);");
       New_Line;
 
       for Group of Document.Group_List loop
