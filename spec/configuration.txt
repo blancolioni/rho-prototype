@@ -193,7 +193,7 @@ bindings = {
   }
   
   glTexParameter = {
-     name = Texture_Mag_Filter
+     name = Set_Texture_Mag_Filter
      parameters = {
        parameter = {
          name = target
@@ -212,7 +212,7 @@ bindings = {
      }
    }
   glTexParameter = {
-     name = Texture_Min_Filter
+     name = Set_Texture_Min_Filter
      parameters = {
        parameter = {
          name = target

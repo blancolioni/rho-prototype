@@ -62,7 +62,9 @@ package body Rho.GL_API.Generator is
          use type Ada.Strings.Unbounded.Unbounded_String;
          Name : constant String := -Command.Name;
          Ada_Name : constant String :=
-                      (if Document.Group_Map.Contains
+                      (if Command.Ada_Name /= ""
+                       then -Command.Ada_Name
+                       elsif Document.Group_Map.Contains
                          (Name (Name'First + 2 .. Name'Last))
                        then "Set_" & To_Ada_Command_Name (Name)
                        else To_Ada_Command_Name (Name));

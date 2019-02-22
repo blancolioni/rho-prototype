@@ -246,13 +246,17 @@ package body Rho.GL_API.Commands is
                            Have_Data_Array => <>,
                            Creates_Object => Binding.Get ("creates-object"));
          begin
-            for Language in API_Binding_Language loop
-               if Binding.Child ("api").Contains
-                 (API_Binding_Language'Image (Language))
-               then
-                  Command.API_Override (Language) := True;
-               end if;
-            end loop;
+            if not Binding.Contains ("api") then
+               Command.API_Override := (others => True);
+            else
+               for Language in API_Binding_Language loop
+                  if Binding.Child ("api").Contains
+                    (API_Binding_Language'Image (Language))
+                  then
+                     Command.API_Override (Language) := True;
+                  end if;
+               end loop;
+            end if;
 
             for Parameter_Config of Binding.Child ("parameters") loop
                Command.Parameters.Append
