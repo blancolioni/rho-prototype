@@ -1,5 +1,13 @@
 overrides = {
+    glCreateShader = {
+       creates-object = yes
+       }
+    glCreateProgram = {
+       creates-object = yes
+       }
+    
     glShaderSource = {
+      replace = yes
       parameters = {
          parameter = {
             name = shader
@@ -14,6 +22,7 @@ overrides = {
     }
     
     glBindBuffer = {
+      replace = yes
       parameters = {
          parameter = {
             name = target
@@ -28,6 +37,7 @@ overrides = {
     }
     
     glBindTexture = {
+      replace = yes
       parameters = {
          parameter = {
             name = target
@@ -42,6 +52,7 @@ overrides = {
     }
     
     glGetUniformLocation = {
+      replace = yes
       parameters = {
          parameter = {
             name = program
@@ -58,6 +69,7 @@ overrides = {
     }
     
     glGetAttribLocation = {
+      replace = yes
       parameters = {
          parameter = {
             name = program
@@ -72,6 +84,7 @@ overrides = {
       return-type = GLuint
     }
     glVertexAttribPointer = {
+      replace = yes
       parameters = {
         parameter = {
           name = index
@@ -100,6 +113,7 @@ overrides = {
         }
       }
     glDrawElements = {
+      replace = yes
       parameters = {
           parameter = {
             name = mode
@@ -119,6 +133,17 @@ overrides = {
             }
           }
     }
+    
+    glTexImage2D = {
+       parameters = {
+          parameter = {
+             name = data
+             image = yes
+             }
+          }
+       }
+    
+    
 }
 
 bindings = {
@@ -166,4 +191,112 @@ bindings = {
      return-type = Boolean
      api = { gnoga }
   }
+  
+  glTexParameter = {
+     name = Texture_Mag_Filter
+     parameters = {
+       parameter = {
+         name = target
+         group = TextureTarget
+         }
+       parameter = {
+         name = pname
+         group = TextureParameterName
+         value = GL_TEXTURE_MAG_FILTER
+         implied = yes
+         }
+       parameter = {
+         name = param
+         group = TextureMagFilter
+       }
+     }
+   }
+  glTexParameter = {
+     name = Texture_Min_Filter
+     parameters = {
+       parameter = {
+         name = target
+         group = TextureTarget
+         }
+       parameter = {
+         name = pname
+         group = TextureParameterName
+         value = GL_TEXTURE_MIN_FILTER
+         implied = yes
+         }
+       parameter = {
+         name = param
+         group = TextureMinFilter
+       }
+     }
+   }
+  glTexParameter = {
+     name = Texture_Wrap_S
+     parameters = {
+       parameter = {
+         name = target
+         group = TextureTarget
+         }
+       parameter = {
+         name = pname
+         group = TextureParameterName
+         value = GL_TEXTURE_WRAP_S
+         implied = yes
+         }
+       parameter = {
+         name = param
+         group = TextureWrapMode
+       }
+     }
+   }
+  glTexParameter = {
+     name = Texture_Wrap_T
+     parameters = {
+       parameter = {
+         name = target
+         group = TextureTarget
+         }
+       parameter = {
+         name = pname
+         group = TextureParameterName
+         value = GL_TEXTURE_WRAP_T
+         implied = yes
+         }
+       parameter = {
+         name = param
+         group = TextureWrapMode
+       }
+     }
+   }
+   glTexImage2D = {
+     name = Tex_Image_2D
+     parameters = {
+       parameter = {
+         name = target
+         group = TextureTarget
+         }
+       parameter = {
+         name = level
+         type = GLint
+         }
+       parameter = {
+         name = Internalformat
+         group = InternalFormat
+       }
+       parameter = {
+         name = format
+         group = PixelFormat
+       }
+       parameter = {
+         name = Item_Type
+         group = PixelType
+       }
+       parameter = {
+         name = Image_Id
+         type = String
+         html-element-id = yes
+       }
+     }
+   }
+   
 }

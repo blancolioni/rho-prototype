@@ -9,5 +9,5 @@ begin
       API     => "gles2",
       Name    => "GL_ES_VERSION_2_0",
       Number  => "2.0",
-      Path    => "../webgl/ext");
+      Path    => "../webgl-trunk/ext");
 end Rho.Binding_Generator;

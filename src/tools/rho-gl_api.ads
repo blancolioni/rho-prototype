@@ -91,11 +91,15 @@ private
          Group_Name       : Ada.Strings.Unbounded.Unbounded_String;
          Type_Name        : Ada.Strings.Unbounded.Unbounded_String;
          Parameter_Name   : Ada.Strings.Unbounded.Unbounded_String;
+         Parameter_Value  : Ada.Strings.Unbounded.Unbounded_String;
+         Implied          : Boolean := False;
          Byte_Offset      : Boolean := False;
          Data_Array       : Boolean := False;
          String_Array     : Boolean := False;
          Writeable_Array  : Boolean := False;
          Object_Reference : Boolean := False;
+         Image_Data       : Boolean := False;
+         Html_Element_Id  : Boolean := False;
       end record;
 
    package Parameter_Lists is
@@ -106,6 +110,7 @@ private
    type Command_Record is
       record
          Name            : Ada.Strings.Unbounded.Unbounded_String;
+         Ada_Name        : Ada.Strings.Unbounded.Unbounded_String;
          Return_Type     : Ada.Strings.Unbounded.Unbounded_String;
          Return_Group    : Ada.Strings.Unbounded.Unbounded_String;
          Parameters      : Parameter_Lists.List;

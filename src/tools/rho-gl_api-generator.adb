@@ -15,6 +15,10 @@ package body Rho.GL_API.Generator is
      (Command_Name : String)
       return String;
 
+   function To_Ada_Constant_Name
+     (Name : String)
+      return String;
+
    function To_Ada_Parameter_Name
      (Parameter_Name : String)
       return String;
@@ -45,6 +49,10 @@ package body Rho.GL_API.Generator is
         (Parameters             : Parameter_Lists.List;
          Data_Array_Target_Name : String;
          Mask_Parameter_Name    : String);
+
+      -----------------
+      -- Put_Command --
+      -----------------
 
       procedure Put_Command
         (Command                : Command_Record;
@@ -116,52 +124,54 @@ package body Rho.GL_API.Generator is
                                       -Parameter.Group_Name;
                begin
 
-                  if Parameter.Data_Array then
-                     Data_Array_Param := Parameter;
-                  end if;
+                  if not Parameter.Implied then
+                     if Parameter.Data_Array then
+                        Data_Array_Param := Parameter;
+                     end if;
 
-                  if First_Parameter then
-                     New_Line;
-                     Put ("     (");
-                     First_Parameter := False;
-                  else
-                     Put_Line (";");
-                     Put ("      ");
-                  end if;
-                  Put
-                    (Ada.Characters.Handling.To_Upper
-                       (Parameter_Name (Parameter_Name'First)));
-                  Put (Parameter_Name (Parameter_Name'First + 1
-                       .. Parameter_Name'Last));
-                  Put (" : ");
-                  if Parameter.Data_Array then
-                     Put (Data_Array_Type_Name);
-                  elsif Parameter.Byte_Offset then
-                     Put ("Natural");
-                  elsif Parameter.Writeable_Array then
-                     Put ("GLvoidptr");
-                  elsif Parameter_Group = "Boolean" then
-                     Put (Parameter_Group);
-                  elsif Parameter_Group = ""
-                    or else not Document.Group_Map.Contains
-                      (Parameter_Group)
-                  then
-                     Put (Parameter_Type);
-                  else
-                     declare
-                        Group : Group_Record renames
-                                  Document.Group_List
-                                    (Document.Group_Map.Element
-                                       (Parameter_Group));
-                     begin
-                        Put (To_Ada_Command_Name (Parameter_Group));
-                        if Group.Bit_Mask then
-                           Put ("_Array");
-                           Have_Group_Mask := True;
-                           Group_Parameter := Parameter;
-                           Group_Mask := Group;
-                        end if;
-                     end;
+                     if First_Parameter then
+                        New_Line;
+                        Put ("     (");
+                        First_Parameter := False;
+                     else
+                        Put_Line (";");
+                        Put ("      ");
+                     end if;
+                     Put
+                       (Ada.Characters.Handling.To_Upper
+                          (Parameter_Name (Parameter_Name'First)));
+                     Put (Parameter_Name (Parameter_Name'First + 1
+                          .. Parameter_Name'Last));
+                     Put (" : ");
+                     if Parameter.Data_Array then
+                        Put (Data_Array_Type_Name);
+                     elsif Parameter.Byte_Offset then
+                        Put ("Natural");
+                     elsif Parameter.Writeable_Array then
+                        Put ("GLvoidptr");
+                     elsif Parameter_Group = "Boolean" then
+                        Put (Parameter_Group);
+                     elsif Parameter_Group = ""
+                       or else not Document.Group_Map.Contains
+                         (Parameter_Group)
+                     then
+                        Put (Parameter_Type);
+                     else
+                        declare
+                           Group : Group_Record renames
+                                     Document.Group_List
+                                       (Document.Group_Map.Element
+                                          (Parameter_Group));
+                        begin
+                           Put (To_Ada_Command_Name (Parameter_Group));
+                           if Group.Bit_Mask then
+                              Put ("_Array");
+                              Have_Group_Mask := True;
+                              Group_Parameter := Parameter;
+                              Group_Mask := Group;
+                           end if;
+                        end;
+                     end if;
                   end if;
                end;
             end loop;
@@ -394,6 +404,8 @@ package body Rho.GL_API.Generator is
                           & "_Values (");
                   elsif Get_GLEnum_Property then
                      Put ("GLEnum_Property (Context, ");
+                  elsif Parameter.Html_Element_Id then
+                     Put ("""$('#"" & ");
                   elsif String_Constant then
                      Put ("""'"" & Escape_Quotes (");
                   elsif Parameter.Object_Reference then
@@ -403,9 +415,15 @@ package body Rho.GL_API.Generator is
                      Put ("Support.Image (");
                   end if;
 
-                  Put (To_Ada_Parameter_Name (Parameter_Name));
+                  if Parameter.Implied then
+                     Put (-Parameter.Parameter_Value);
+                  else
+                     Put (To_Ada_Parameter_Name (Parameter_Name));
+                  end if;
 
-                  if String_Constant then
+                  if Parameter.Html_Element_Id then
+                     Put (" & ""')"" & "".get(0)""");
+                  elsif String_Constant then
                      Put (") & ""'""");
                   elsif Parameter.Object_Reference
                     or else Float_Argument
@@ -671,7 +689,7 @@ package body Rho.GL_API.Generator is
          if Feature.Enum_Set.Contains (-Id.Name) then
             Put_Line
               ("   "
-               & Ada.Strings.Unbounded.To_String (Id.Name)
+               & To_Ada_Constant_Name (-Id.Name)
                & " : constant :="
                & Id.Value'Image
                & ";");
@@ -788,7 +806,7 @@ package body Rho.GL_API.Generator is
                   if Skip then
                      Skip := False;
                   else
-                     Put (-Id.Name);
+                     Put (To_Ada_Constant_Name (-Id.Name));
                      Prev := Id.Value;
                   end if;
 
@@ -828,7 +846,7 @@ package body Rho.GL_API.Generator is
                      if Skip then
                         Skip := False;
                      else
-                        Put (-Id.Name);
+                        Put (To_Ada_Constant_Name (-Id.Name));
                         Put (" =>");
                         Put (Constant_Value'Image (Id.Value));
                      end if;
@@ -883,7 +901,9 @@ package body Rho.GL_API.Generator is
                Skipping := False;
             else
                Add ('_');
-               Add (Ch);
+               if Ch /= '_' then
+                  Add (Ch);
+               end if;
             end if;
          elsif not Skipping then
             Add (Ch);
@@ -896,6 +916,40 @@ package body Rho.GL_API.Generator is
       end if;
       return Result (1 .. Length);
    end To_Ada_Command_Name;
+
+   --------------------------
+   -- To_Ada_Constant_Name --
+   --------------------------
+
+   function To_Ada_Constant_Name
+     (Name : String)
+      return String
+   is
+      use Ada.Characters.Handling;
+      Lower_Name    : constant String :=
+                        Ada.Characters.Handling.To_Lower (Name);
+      First         : Positive := Lower_Name'First;
+      Last          : constant Positive := Lower_Name'Last;
+      Start_Of_Word : Boolean := True;
+   begin
+      if Lower_Name (First .. First + 2) = "gl_" then
+         First := First + 3;
+      end if;
+
+      declare
+         Result : String := Lower_Name (First .. Last);
+      begin
+         for Ch of Result loop
+            if Start_Of_Word then
+               Ch := To_Upper (Ch);
+               Start_Of_Word := False;
+            elsif Ch = '_' then
+               Start_Of_Word := True;
+            end if;
+         end loop;
+         return "GL_" & Result;
+      end;
+   end To_Ada_Constant_Name;
 
    ---------------------------
    -- To_Ada_Parameter_Name --
