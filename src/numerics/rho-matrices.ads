@@ -48,7 +48,7 @@ package Rho.Matrices is
    function Cross (U, V : Vector_3) return Vector_3;
 
    type Rho_Matrix_Operation_Record is
-     abstract tagged private;
+     abstract tagged limited private;
 
    type Matrix_Mode_Type is
      (Model_View, Projection, Texture);
@@ -136,7 +136,7 @@ private
      array (Matrix_Mode_Type) of List_Of_Matrices.List;
 
    type Rho_Matrix_Operation_Record is
-     abstract tagged
+     abstract tagged limited
       record
          Current_Matrix : Current_Matrix_Array :=
                             (others => Rho.Float_Arrays.Unit_Matrix (4));

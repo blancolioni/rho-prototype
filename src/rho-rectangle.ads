@@ -11,7 +11,7 @@ package Rho.Rectangle is
       X, Y : Rho_Float)
       return Boolean;
 
-   type Rho_Rectangle_Interface is interface;
+   type Rho_Rectangle_Interface is limited interface;
 
    procedure Set_Rectangle (Item : in out Rho_Rectangle_Interface;
                             Rectangle : Rho_Rectangle)

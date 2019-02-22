@@ -11,7 +11,7 @@ package Rho.Rendering is
 
    Render_Error : exception;
 
-   type Rho_Renderer_Record is abstract tagged private;
+   type Rho_Renderer_Record is abstract tagged limited private;
 
    procedure Render_Loop
      (Renderer : in out Rho_Renderer_Record)
@@ -76,6 +76,6 @@ package Rho.Rendering is
 
 private
 
-   type Rho_Renderer_Record is abstract tagged null record;
+   type Rho_Renderer_Record is abstract tagged limited null record;
 
 end Rho.Rendering;
