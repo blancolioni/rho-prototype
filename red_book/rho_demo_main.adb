@@ -73,7 +73,7 @@ package body Rho_Demo_Main is
    end Choose_Demo;
 
    ---------------
-   -- EXIT_Demo --
+   -- Exit_Demo --
    ---------------
 
    function Exit_Demo
