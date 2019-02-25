@@ -3,12 +3,7 @@ with Ada.Text_IO;
 
 with Interfaces.C.Strings;
 
-with GL_Constants;
-with GL;
-
-package body Rho.Shader is
-
-   use GL, GL_Types, GL_Constants;
+package body Rho.Shaders is
 
    package String_Vectors is
      new Ada.Containers.Indefinite_Vectors (Positive, String);
@@ -437,4 +432,4 @@ package body Rho.Shader is
       return Result;
    end Uniform_Value;
 
-end Rho.Shader;
+end Rho.Shaders;

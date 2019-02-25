@@ -9,7 +9,7 @@ with Cairo.Png;
 
 with Rho.Matrices;
 with Rho.Render_Operation;
-with Rho.Shader.Load;
+with Rho.Shaders.Load;
 
 package body Rho.Toolkit.Buffer is
 
@@ -17,8 +17,8 @@ package body Rho.Toolkit.Buffer is
 
    Tile_Size : constant := 64;
 
-   Shader : Rho.Shader.Rho_Shader := null;
---     Tex    : Rho.Shader.Rho_Uniform_Value;
+   Shader : Rho.Shaders.Rho_Shader := null;
+--     Tex    : Rho.Shaders.Rho_Uniform_Value;
 
    procedure Free is
      new Ada.Unchecked_Deallocation (Buffer_Tile_Array,
@@ -39,10 +39,10 @@ package body Rho.Toolkit.Buffer is
      (Geometry : Rho.Rectangle.Rho_Rectangle)
       return Rho_Buffer
    is
-      use type Rho.Shader.Rho_Shader;
+      use type Rho.Shaders.Rho_Shader;
    begin
       if Shader = null then
-         Shader := Rho.Shader.Load.Load_Standard_Shader ("rho_toolkit");
+         Shader := Rho.Shaders.Load.Load_Standard_Shader ("rho_toolkit");
       end if;
 
       return Buffer : constant Rho_Buffer := new Rho_Buffer_Record do

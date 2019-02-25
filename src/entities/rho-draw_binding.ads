@@ -1,11 +1,13 @@
 private with Ada.Containers.Vectors;
 private with Rho.Vertex_Array;
 
+limited with Rho.Context;
+
 with Rho.Float_Buffer;
 with Rho.Renderable;
 with Rho.Render_Operation;
 with Rho.Render_Target;
-with Rho.Shader;
+with Rho.Shaders.Values;
 
 package Rho.Draw_Binding is
 
@@ -16,10 +18,12 @@ package Rho.Draw_Binding is
 
    procedure Rho_New
      (Draw_Binding : in out Rho_Draw_Binding;
+      Context      : not null access Rho.Context.Rho_Context_Record'Class;
       Operation    : Rho.Render_Operation.Operation_Type);
 
    procedure Initialize
      (Draw_Binding : in out Rho_Draw_Binding_Record;
+      Context      : not null access Rho.Context.Rho_Context_Record'Class;
       Operation    : Rho.Render_Operation.Operation_Type);
 
    overriding function Loaded
@@ -46,7 +50,7 @@ package Rho.Draw_Binding is
    procedure Append
      (Draw_Binding : in out Rho_Draw_Binding_Record;
       Attribute    : not null access
-        Rho.Shader.Rho_Attribute_Value_Record'Class;
+        Rho.Shaders.Values.Rho_Attribute_Value_Record'Class;
       Size         : Positive;
       Buffer       : Rho.Float_Buffer.Rho_Float_Buffer);
 
@@ -58,7 +62,7 @@ private
 
    type Attribute_Binding_Record is
       record
-         Attribute : Rho.Shader.Rho_Attribute_Value;
+         Attribute : Rho.Shaders.Values.Rho_Attribute_Value;
          Start     : Positive;
          Size      : Positive;
       end record;
@@ -72,6 +76,7 @@ private
       record
          Loaded         : Boolean := False;
          Bound          : Boolean := False;
+         Context        : not null access Rho.Context.Rho_Context_Record'Class;
          Operation      : Rho.Render_Operation.Operation_Type;
          Vertex_Array   : Rho.Vertex_Array.Rho_Vertex_Array;
          Buffer         : Rho.Float_Buffer.Rho_Float_Buffer;

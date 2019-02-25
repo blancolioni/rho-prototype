@@ -4,6 +4,8 @@ private with Ada.Containers.Indefinite_Vectors;
 private with Rho.Color;
 private with Rho.Matrices;
 
+limited with Rho.Context;
+
 with Rho.Object;
 with Rho.Resource;
 
@@ -75,6 +77,7 @@ private
      new Rho.Object.Rho_Resource_Record
      and Rho.Resource.Rho_Resource_Interface with
       record
+         Context    : access Rho.Context.Rho_Context_Record'Class;
          Sub_Meshes : Sub_Mesh_Vectors.Vector;
       end record;
 

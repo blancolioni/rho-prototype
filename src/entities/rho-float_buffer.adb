@@ -1,6 +1,7 @@
 with GL_Types;
 
-with Rho.Main;
+with Rho.Context;
+with Rho.Rendering;
 
 package body Rho.Float_Buffer is
 
@@ -87,7 +88,8 @@ package body Rho.Float_Buffer is
    is
    begin
       return new Rho_Float_Buffer_Record'
-        (Values        => Buffer.Values,
+        (Context       => Buffer.Context,
+         Values        => Buffer.Values,
          Vertex_Arrays => Buffer.Vertex_Arrays,
          Id            => 0);
    end Copy;
@@ -108,9 +110,13 @@ package body Rho.Float_Buffer is
    -- Create --
    ------------
 
-   procedure Create (Item : out Rho_Float_Buffer) is
+   procedure Create
+     (Item    : out Rho_Float_Buffer;
+      Context : not null access Rho.Context.Rho_Context_Record'Class)
+   is
    begin
       Item := new Rho_Float_Buffer_Record;
+      Item.Context := Context;
       Item.Id := 0;
    end Create;
 
@@ -118,11 +124,14 @@ package body Rho.Float_Buffer is
    -- Create --
    ------------
 
-   function Create return Rho_Float_Buffer is
+   function Create
+     (Context : not null access Rho.Context.Rho_Context_Record'Class)
+      return Rho_Float_Buffer is
    begin
       return Result : constant Rho_Float_Buffer :=
         new Rho_Float_Buffer_Record
       do
+         Result.Context := Context;
          Result.Id := 0;
       end return;
    end Create;
@@ -131,9 +140,13 @@ package body Rho.Float_Buffer is
    -- Create --
    ------------
 
-   function Create (Values : Array_Of_Floats) return Rho_Float_Buffer is
+   function Create
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Values  : Array_Of_Floats)
+      return Rho_Float_Buffer
+   is
    begin
-      return Result : constant Rho_Float_Buffer := Create do
+      return Result : constant Rho_Float_Buffer := Create (Context) do
          for V of Values loop
             Result.Append (V);
          end loop;
@@ -160,7 +173,7 @@ package body Rho.Float_Buffer is
      (Left, Right : Rho_Float_Buffer)
       return Rho_Float_Buffer
    is
-      Result : constant Rho_Float_Buffer := Create;
+      Result : constant Rho_Float_Buffer := Create (Left.Context);
    begin
       Result.Append (Left);
       Result.Append (Right);
@@ -175,8 +188,7 @@ package body Rho.Float_Buffer is
      (Buffer : in out Rho_Float_Buffer_Record'Class)
    is
    begin
-      Buffer.Id :=
-        Rho.Main.Current_Renderer.Load_Buffer (Buffer);
+      Buffer.Id := Buffer.Context.Renderer.Load_Buffer (Buffer);
    end Load;
 
    --------------------

@@ -2,6 +2,8 @@ private with Ada.Containers.Vectors;
 
 with System.Storage_Elements;
 
+limited with Rho.Context;
+
 with Rho.Color;
 with Rho.Matrices;
 
@@ -69,10 +71,18 @@ package Rho.Float_Buffer is
    function Join (Left, Right : Rho_Float_Buffer)
                   return Rho_Float_Buffer;
 
-   procedure Create (Item : out Rho_Float_Buffer);
+   procedure Create
+     (Item : out Rho_Float_Buffer;
+      Context : not null access Rho.Context.Rho_Context_Record'Class);
 
-   function Create return Rho_Float_Buffer;
-   function Create (Values : Array_Of_Floats) return Rho_Float_Buffer;
+   function Create
+     (Context : not null access Rho.Context.Rho_Context_Record'Class)
+      return Rho_Float_Buffer;
+
+   function Create
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Values  : Array_Of_Floats)
+      return Rho_Float_Buffer;
 
 private
 
@@ -89,6 +99,7 @@ private
 
    type Rho_Float_Buffer_Record is tagged
       record
+         Context       : access Rho.Context.Rho_Context_Record'Class;
          Values        : Float_Vectors.Vector;
          Vertex_Arrays : Vertex_Info_Vectors.Vector;
          Id            : Rho_Float_Buffer_Id;

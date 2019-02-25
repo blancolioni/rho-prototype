@@ -7,7 +7,7 @@ with Rho.Limits;
 with Rho.Matrices;
 with Rho.Rectangle;
 with Rho.Render_Operation;
-with Rho.Shader;
+with Rho.Shaders.Values;
 with Rho.Texture;
 with Rho.Viewport;
 
@@ -88,7 +88,7 @@ package Rho.Render_Target is
 
    procedure Uniform_Float_Array
      (Target   : not null access Rho_Render_Target_Record;
-      Uniform  : Rho.Shader.Rho_Uniform_Value;
+      Uniform  : Rho.Shaders.Values.Rho_Uniform_Value;
       Value    : Rho.Float_Arrays.Real_Vector)
    is abstract;
 
@@ -152,15 +152,15 @@ package Rho.Render_Target is
 
    procedure Push_Shader
      (Target : in out Rho_Render_Target_Record;
-      Shader : Rho.Shader.Rho_Shader)
-     with Pre => Rho.Shader."/=" (Shader, null);
+      Shader : Rho.Shaders.Rho_Shader)
+     with Pre => Rho.Shaders."/=" (Shader, null);
 
    procedure Pop_Shader
      (Target : in out Rho_Render_Target_Record);
 
    function Current_Shader
      (Target : Rho_Render_Target_Record)
-      return Rho.Shader.Rho_Shader;
+      return Rho.Shaders.Rho_Shader;
 
    procedure Activate_Shader
      (Target : in out Rho_Render_Target_Record);
@@ -183,7 +183,7 @@ package Rho.Render_Target is
    procedure Bind_Vertex_Attribute
      (Target         : not null access Rho_Render_Target_Record;
       Buffer         : Rho.Float_Buffer.Rho_Float_Buffer;
-      Attribute      : Rho.Shader.Rho_Attribute_Value;
+      Attribute      : Rho.Shaders.Values.Rho_Attribute_Value;
       Start          : Positive;
       Component_Size : Positive;
       Is_Array       : Boolean)
@@ -265,7 +265,7 @@ private
 
    package List_Of_Shaders is
      new Ada.Containers.Doubly_Linked_Lists
-       (Rho.Shader.Rho_Shader, Rho.Shader."=");
+       (Rho.Shaders.Rho_Shader, Rho.Shaders."=");
 
    type Matrix_Flags is array (Rho.Matrices.Matrix_Mode_Type) of Boolean;
 
@@ -302,7 +302,7 @@ private
          Point_Size        : Boolean := False;
          Shaders           : List_Of_Shaders.List;
          Active_Shader     : Boolean := False;
-         Current_Shader    : Rho.Shader.Rho_Shader;
+         Current_Shader    : Rho.Shaders.Rho_Shader;
          Matrix_Saved      : Matrix_Flags := (others => False);
          Resize_Handler    : Render_Target_Resize_Handler;
          Current_Lights    : Array_Of_Lights;

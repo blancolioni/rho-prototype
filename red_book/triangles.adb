@@ -5,7 +5,7 @@ with GL;                               use GL;
 with GLUT;
 
 with Rho.Paths;
-with Rho.Shader;
+with Rho.Shaders;
 
 package body Triangles is
 
@@ -44,16 +44,16 @@ package body Triangles is
    ---------
 
    procedure Run is
-      Vertex_Shader : constant Rho.Shader.Rho_Shader :=
-                        Rho.Shader.Load (Rho.Paths.Config_Path
+      Vertex_Shader : constant Rho.Shaders.Rho_Shader :=
+                        Rho.Shaders.Load (Rho.Paths.Config_Path
                                         & "/shaders/triangles.vert",
-                                        Rho.Shader.Vertex);
-      Fragment_Shader : constant Rho.Shader.Rho_Shader :=
-                        Rho.Shader.Load (Rho.Paths.Config_Path
+                                        Rho.Shaders.Vertex);
+      Fragment_Shader : constant Rho.Shaders.Rho_Shader :=
+                        Rho.Shaders.Load (Rho.Paths.Config_Path
                                         & "/shaders/triangles.frag",
-                                        Rho.Shader.Fragment);
-      Program         : constant Rho.Shader.Rho_Program :=
-                          Rho.Shader.Create;
+                                        Rho.Shaders.Fragment);
+      Program         : constant Rho.Shaders.Rho_Program :=
+                          Rho.Shaders.Create;
    begin
 
       Gen_Vertex_Arrays (1, VAOs (VAOs'First)'Access);

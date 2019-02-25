@@ -95,7 +95,7 @@ overrides = {
           type = GLuint
           }
         parameter = {
-          name = itemType
+          name = Element_Type
           group = VertexAttribPointerType
           }
         parameter = {

@@ -5,7 +5,7 @@ with Rho.Rectangle;
 with Rho.Render_Operation;
 with Rho.Render_Target;
 with Rho.Render_Window;
-with Rho.Shader;
+with Rho.Shaders.Values;
 with Rho.Viewport;
 
 package Rho.Rendering.GL_Renderer.GL_Window is
@@ -43,7 +43,7 @@ package Rho.Rendering.GL_Renderer.GL_Window is
 
    overriding procedure Uniform_Float_Array
      (Window   : not null access Rho_GL_Window_Record;
-      Uniform  : Rho.Shader.Rho_Uniform_Value;
+      Uniform  : Rho.Shaders.Values.Rho_Uniform_Value;
       Value    : Rho.Float_Arrays.Real_Vector);
 
    type Rho_GL_Window is access all Rho_GL_Window_Record'Class;
@@ -116,7 +116,7 @@ private
    overriding procedure Bind_Vertex_Attribute
      (Target          : not null access Rho_GL_Window_Record;
       Buffer          : Rho.Float_Buffer.Rho_Float_Buffer;
-      Attribute       : Rho.Shader.Rho_Attribute_Value;
+      Attribute       : Rho.Shaders.Values.Rho_Attribute_Value;
       Start           : Positive;
       Component_Size  : Positive;
       Is_Array        : Boolean);

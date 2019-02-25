@@ -6,26 +6,30 @@ with WL.Bitmap_IO;
 
 with Tropos.Reader;
 
-with Rho.Assets;
+with Rho.Context;
 
 package body Rho.Texture.Loader is
 
    function Load_Texture_File
-     (Path : String)
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Path    : String)
       return Rho_Texture;
 
    function Load_From_Image_File
-     (Name : String;
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String;
       Path : String)
       return Rho_Texture;
 
    function Load_From_Bitmap
-     (Name : String;
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String;
       Path : String)
       return Rho_Texture;
 
    function Load_From_Png
-     (Name : String;
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String;
       Path : String)
       return Rho_Texture;
 
@@ -34,7 +38,8 @@ package body Rho.Texture.Loader is
    ----------------------
 
    function Load_From_Bitmap
-     (Name : String;
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String;
       Path : String)
       return Rho_Texture
    is
@@ -60,7 +65,7 @@ package body Rho.Texture.Loader is
          end loop;
       end loop;
 
-      return Create_From_Data (Name, Data.all);
+      return Create_From_Data (Context, Name, Data.all);
 
    end Load_From_Bitmap;
 
@@ -69,7 +74,8 @@ package body Rho.Texture.Loader is
    ------------------
 
    function Load_From_Image_File
-     (Name : String;
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String;
       Path : String)
       return Rho_Texture
    is
@@ -79,10 +85,10 @@ package body Rho.Texture.Loader is
    begin
       if Extension = "png" then
          return Load_From_Png
-           (Name, Path);
+           (Context, Name, Path);
       elsif Extension = "bmp" then
          return Load_From_Bitmap
-              (Name, Path);
+              (Context, Name, Path);
       else
          Ada.Text_IO.Put_Line
            (Ada.Text_IO.Standard_Error,
@@ -96,12 +102,13 @@ package body Rho.Texture.Loader is
    -------------------
 
    function Load_From_Png
-     (Name : String;
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String;
       Path : String)
       return Rho_Texture
    is
    begin
-      return Create_From_Png (Name, Path);
+      return Create_From_Png (Context, Name, Path);
    end Load_From_Png;
 
    ------------------
@@ -109,7 +116,8 @@ package body Rho.Texture.Loader is
    ------------------
 
    function Load_Texture
-     (Path : String)
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Path    : String)
       return Rho_Texture
    is
       Extension : constant String :=
@@ -117,10 +125,10 @@ package body Rho.Texture.Loader is
                       (Ada.Directories.Extension (Path));
    begin
       if Extension = "texture" then
-         return Load_Texture_File (Path);
+         return Load_Texture_File (Context, Path);
       else
          return Load_From_Image_File
-           (Ada.Directories.Base_Name (Path), Path);
+           (Context, Ada.Directories.Base_Name (Path), Path);
       end if;
    end Load_Texture;
 
@@ -129,7 +137,8 @@ package body Rho.Texture.Loader is
    -----------------------
 
    function Load_Texture_File
-     (Path : String)
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Path    : String)
       return Rho_Texture
    is
       Texture_Config : constant Tropos.Configuration :=
@@ -141,7 +150,7 @@ package body Rho.Texture.Loader is
       Image_Raw_Path : constant String :=
                          Texture_Config.Get ("image", "");
       Image_Path     : constant String :=
-                         Rho.Assets.Image_Path (Image_Raw_Path);
+                         Context.Image_Path (Image_Raw_Path);
    begin
       if Image_Path = "" then
          Ada.Text_IO.Put_Line
@@ -149,7 +158,7 @@ package body Rho.Texture.Loader is
             Image_Raw_Path & ": cannot find image");
          return null;
       else
-         return Load_From_Image_File (Name, Image_Path);
+         return Load_From_Image_File (Context, Name, Image_Path);
       end if;
    end Load_Texture_File;
 

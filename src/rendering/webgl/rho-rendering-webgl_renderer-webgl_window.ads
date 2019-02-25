@@ -7,13 +7,15 @@ with Rho.Rectangle;
 with Rho.Render_Operation;
 with Rho.Render_Target;
 with Rho.Render_Window;
-with Rho.Shader;
+with Rho.Shaders.Values;
 with Rho.Viewport;
 
 package Rho.Rendering.WEbGL_Renderer.WebGL_Window is
 
    type Rho_WebGL_Window_Record is
      new Rho.Render_Window.Rho_Render_Window_Record with private;
+
+   type Rho_WebGL_Window is access all Rho_WebGL_Window_Record'Class;
 
    overriding procedure Blend
      (Window : in out Rho_WebGL_Window_Record;
@@ -45,12 +47,12 @@ package Rho.Rendering.WEbGL_Renderer.WebGL_Window is
 
    overriding procedure Uniform_Float_Array
      (Window   : not null access Rho_WebGL_Window_Record;
-      Uniform  : Rho.Shader.Rho_Uniform_Value;
+      Uniform  : Rho.Shaders.Values.Rho_Uniform_Value;
       Value    : Rho.Float_Arrays.Real_Vector);
 
-   type Rho_WebGL_Window is access all Rho_WebGL_Window_Record'Class;
-
-   function Create_Top_Level_Window return Rho_WebGL_Window;
+   function Create_Top_Level_Window
+     (Parent : in out Gnoga.Gui.Element.Element_Type'Class)
+      return Rho_WebGL_Window;
 
    function Context
      (Window : Rho_WebGL_Window_Record'Class)
@@ -83,8 +85,8 @@ private
       Viewport : in Rho.Viewport.Rho_Viewport);
 
    overriding procedure Set_Clear_Color
-     (Item  : in out Rho_WebGL_Window_Record;
-      Color : Rho.Color.Rho_Color);
+     (Window : in out Rho_WebGL_Window_Record;
+      Color  : Rho.Color.Rho_Color);
 
    overriding procedure Set_Rectangle
      (Item  : in out Rho_WebGL_Window_Record;
@@ -105,30 +107,35 @@ private
      (Window : not null access Rho_WebGL_Window_Record);
 
    overriding procedure Set_Output_Position
-     (Target             : not null access Rho_WebGL_Window_Record;
+     (Window             : not null access Rho_WebGL_Window_Record;
       X, Y               : Rho_Float);
 
    overriding procedure Set_Raster_Position
-     (Target             : not null access Rho_WebGL_Window_Record;
+     (Window             : not null access Rho_WebGL_Window_Record;
       Position : Rho.Matrices.Vector_3);
 
    overriding procedure Set_Texture
-     (Target  : not null access Rho_WebGL_Window_Record;
+     (Window  : not null access Rho_WebGL_Window_Record;
       Texture : Rho.Texture.Rho_Texture);
 
    overriding procedure Draw_Buffer
-     (Target          : not null access Rho_WebGL_Window_Record;
+     (Window          : not null access Rho_WebGL_Window_Record;
       Buffer          : Rho.Float_Buffer.Rho_Float_Buffer;
       Operation       : Rho.Render_Operation.Operation_Type;
       Count           : Natural;
       Instance_Count  : Positive := 1);
 
    overriding procedure Bind_Vertex_Attribute
-     (Target          : not null access Rho_WebGL_Window_Record;
+     (Window          : not null access Rho_WebGL_Window_Record;
       Buffer          : Rho.Float_Buffer.Rho_Float_Buffer;
-      Attribute       : Rho.Shader.Rho_Attribute_Value;
+      Attribute       : Rho.Shaders.Values.Rho_Attribute_Value;
       Start           : Positive;
       Component_Size  : Positive;
       Is_Array        : Boolean);
+
+   function Context
+     (Window : Rho_WebGL_Window_Record'Class)
+      return Gnoga.Gui.Element.Canvas.Context_WebGL.Context_WebGL_Access
+   is (Window.Context);
 
 end Rho.Rendering.WebGL_Renderer.WebGL_Window;

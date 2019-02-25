@@ -14,5 +14,7 @@ package Rho is
    is (Clamp (X, 0.0, 1.0));
 
    type Uniform_Location_Type is new Integer;
+   type Rho_Shader_Id is new Natural;
+   type Rho_Program_Id is new Natural;
 
 end Rho;

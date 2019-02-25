@@ -7,13 +7,13 @@ package body Rho.Draw_Binding is
    procedure Append
      (Draw_Binding : in out Rho_Draw_Binding_Record;
       Attribute    : not null access
-        Rho.Shader.Rho_Attribute_Value_Record'Class;
+        Rho.Shaders.Values.Rho_Attribute_Value_Record'Class;
       Size         : Positive;
       Buffer       : Rho.Float_Buffer.Rho_Float_Buffer)
    is
    begin
       Draw_Binding.Bindings.Append
-        ((Rho.Shader.Rho_Attribute_Value (Attribute),
+        ((Rho.Shaders.Values.Rho_Attribute_Value (Attribute),
          Draw_Binding.Buffer.Count + 1, Size));
       Draw_Binding.Buffer.Append (Buffer);
       if Draw_Binding.Vertex_Count = 0 then
@@ -82,10 +82,12 @@ package body Rho.Draw_Binding is
 
    procedure Initialize
      (Draw_Binding : in out Rho_Draw_Binding_Record;
+      Context      : not null access Rho.Context.Rho_Context_Record'Class;
       Operation    : Rho.Render_Operation.Operation_Type) is
    begin
+      Draw_Binding.Context := Context;
       Draw_Binding.Operation := Operation;
-      Rho.Float_Buffer.Create (Draw_Binding.Buffer);
+      Rho.Float_Buffer.Create (Draw_Binding.Buffer, Context);
    end Initialize;
 
    ----------
@@ -125,11 +127,12 @@ package body Rho.Draw_Binding is
 
    procedure Rho_New
      (Draw_Binding : in out Rho_Draw_Binding;
+      Context      : not null access Rho.Context.Rho_Context_Record'Class;
       Operation    : Rho.Render_Operation.Operation_Type)
    is
    begin
       Draw_Binding := new Rho_Draw_Binding_Record;
-      Draw_Binding.Initialize (Operation);
+      Draw_Binding.Initialize (Context, Operation);
    end Rho_New;
 
    -------------------

@@ -65,7 +65,7 @@ private
    type Instanced_Attribute_Record is
       record
          Active    : Boolean := False;
-         Attribute : Rho.Shader.Rho_Attribute_Value;
+         Attribute : Rho.Shaders.Rho_Attribute_Value;
          Buffer    : Rho.Float_Buffer.Rho_Float_Buffer;
          Size      : Positive;
       end record;

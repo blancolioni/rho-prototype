@@ -15,7 +15,7 @@ package body Rho.Render_Target is
    procedure Activate_Shader
      (Target : in out Rho_Render_Target_Record)
    is
-      use type Rho.Shader.Rho_Shader;
+      use type Rho.Shaders.Rho_Shader;
    begin
       if Target.Active_Shader
         and then Target.Current_Shader /= Target.Shaders.First_Element
@@ -127,7 +127,7 @@ package body Rho.Render_Target is
 
    function Current_Shader
      (Target : Rho_Render_Target_Record)
-      return Rho.Shader.Rho_Shader
+      return Rho.Shaders.Rho_Shader
    is
    begin
       if Target.Shaders.Is_Empty then
@@ -340,8 +340,8 @@ package body Rho.Render_Target is
    procedure Pop_Shader
      (Target : in out Rho_Render_Target_Record)
    is
---        use type Rho.Shader.Rho_Shader;
---        Top : constant Rho.Shader.Rho_Shader :=
+--        use type Rho.Shaders.Rho_Shader;
+--        Top : constant Rho.Shaders.Rho_Shader :=
 --                Target.Shaders.First_Element;
    begin
       Target.Shaders.Delete_First;
@@ -362,9 +362,9 @@ package body Rho.Render_Target is
 
    procedure Push_Shader
      (Target : in out Rho_Render_Target_Record;
-      Shader : Rho.Shader.Rho_Shader)
+      Shader : Rho.Shaders.Rho_Shader)
    is
---        use type Rho.Shader.Rho_Shader;
+--        use type Rho.Shaders.Rho_Shader;
 --        Changed : constant Boolean :=
 --                    Target.Shaders.Is_Empty;
                   --  or else Shader /= Target.Shaders.First_Element;

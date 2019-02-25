@@ -12,7 +12,8 @@ package body Rho.Shapes is
    ----------
 
    function Cube
-     (Size : Rho_Float := 1.0)
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Size    : Rho_Float := 1.0)
       return Rho.Entity.Rho_Entity
    is
       use Rho.Matrices;
@@ -67,7 +68,7 @@ package body Rho.Shapes is
       Result   : Rho.Entity.Rho_Entity;
 
    begin
-      Rho.Entity.Rho_New (Result);
+      Rho.Entity.Rho_New (Result, Context);
       Result.Begin_Operation (Rho.Render_Operation.Triangle_List);
 
       for Face in Vertex_Indices'Range (1) loop
@@ -95,7 +96,8 @@ package body Rho.Shapes is
    ------------------------
 
    function Icosohedral_Sphere
-     (Detail : Natural)
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Detail  : Natural)
       return Rho.Entity.Rho_Entity
    is
       function White
@@ -116,7 +118,7 @@ package body Rho.Shapes is
       end White;
 
    begin
-      return Icosohedral_Sphere (Detail, White'Access);
+      return Icosohedral_Sphere (Context, Detail, White'Access);
    end Icosohedral_Sphere;
 
    ------------------------
@@ -124,8 +126,9 @@ package body Rho.Shapes is
    ------------------------
 
    function Icosohedral_Sphere
-     (Detail  : Natural;
-      Color  : not null access
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Detail  : Natural;
+      Color   : not null access
         function (X, Y, Z : Signed_Unit_Float)
       return Rho.Color.Rho_Color)
       return Rho.Entity.Rho_Entity
@@ -212,7 +215,7 @@ package body Rho.Shapes is
       end Subdivide;
 
    begin
-      Rho.Entity.Rho_New (Result);
+      Rho.Entity.Rho_New (Result, Context);
       Result.Begin_Operation (Rho.Render_Operation.Triangle_List);
       for I in Triangles'Range (1) loop
          Subdivide (Vertex_Data (Triangles (I, 1)),
@@ -229,7 +232,8 @@ package body Rho.Shapes is
    ------------------
 
    function Quadric_Cone
-     (Slices     : Positive;
+     (Context    : not null access Rho.Context.Rho_Context_Record'Class;
+      Slices     : Positive;
       Stacks     : Positive)
       return Rho.Entity.Rho_Entity
    is
@@ -241,7 +245,7 @@ package body Rho.Shapes is
 
    begin
       return Quadric_Surface
-        (Slices, Stacks,
+        (Context, Slices, Stacks,
          Radius_Fn => Radius'Access,
          Z_Fn      => Z_Value'Access);
    end Quadric_Cone;
@@ -251,7 +255,8 @@ package body Rho.Shapes is
    -----------------------------
 
    function Quadric_Conical_Frustum
-     (Slices       : Positive;
+     (Context      : not null access Rho.Context.Rho_Context_Record'Class;
+      Slices       : Positive;
       Stacks       : Positive;
       Radius_Ratio : Unit_Float)
       return Rho.Entity.Rho_Entity
@@ -264,7 +269,7 @@ package body Rho.Shapes is
 
    begin
       return Quadric_Surface
-        (Slices, Stacks,
+        (Context, Slices, Stacks,
          Radius_Fn => Radius'Access,
          Z_Fn      => Z_Value'Access);
    end Quadric_Conical_Frustum;
@@ -274,7 +279,8 @@ package body Rho.Shapes is
    ----------------------
 
    function Quadric_Cylinder
-     (Slices     : Positive;
+     (Context    : not null access Rho.Context.Rho_Context_Record'Class;
+      Slices     : Positive;
       Stacks     : Positive)
       return Rho.Entity.Rho_Entity
    is
@@ -291,7 +297,7 @@ package body Rho.Shapes is
 
    begin
       return Quadric_Surface
-        (Slices, Stacks,
+        (Context, Slices, Stacks,
          Radius_Fn => Radius'Access,
          Z_Fn      => Z_Value'Access);
    end Quadric_Cylinder;
@@ -301,7 +307,8 @@ package body Rho.Shapes is
    --------------------
 
    function Quadric_Sphere
-     (Slices     : Positive;
+     (Context    : not null access Rho.Context.Rho_Context_Record'Class;
+      Slices     : Positive;
       Stacks     : Positive)
       return Rho.Entity.Rho_Entity
    is
@@ -317,7 +324,7 @@ package body Rho.Shapes is
    begin
 
       return Quadric_Surface
-        (Slices, Stacks,
+        (Context, Slices, Stacks,
          Radius_Fn => Radius'Access,
          Z_Fn      => Z_Value'Access);
 
@@ -328,7 +335,8 @@ package body Rho.Shapes is
    ---------------------
 
    function Quadric_Surface
-     (Slices     : Positive;
+     (Context    : not null access Rho.Context.Rho_Context_Record'Class;
+      Slices     : Positive;
       Stacks     : Positive;
       Z_Min      : Signed_Unit_Float := -1.0;
       Z_Max      : Signed_Unit_Float := 1.0;
@@ -347,7 +355,7 @@ package body Rho.Shapes is
       End_R   : constant Non_Negative_Float := Radius_Fn (Z_Max);
    begin
 
-      Rho.Entity.Rho_New (Result);
+      Rho.Entity.Rho_New (Result, Context);
 
       for Latitude_Index in 0 .. Stacks loop
          declare
@@ -494,13 +502,14 @@ package body Rho.Shapes is
    ------------
 
    function Square
-     (Size : Rho_Float)
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Size    : Rho_Float)
       return Rho.Entity.Rho_Entity
    is
       Entity : Rho.Entity.Rho_Entity;
    begin
-      Rho.Entity.Rho_New (Entity);
-      Entity.Begin_Operation (Rho.Render_Operation.Quad_List);
+      Rho.Entity.Rho_New (Entity, Context);
+      Entity.Begin_Operation (Rho.Render_Operation.Triangle_Fan);
 
       Entity.Texture_Coordinate (0.0, 0.0);
       Entity.Normal (0.0, 0.0, 1.0);

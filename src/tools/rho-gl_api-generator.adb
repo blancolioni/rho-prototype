@@ -148,7 +148,7 @@ package body Rho.GL_API.Generator is
                      if Parameter.Data_Array then
                         Put (Data_Array_Type_Name);
                      elsif Parameter.Byte_Offset then
-                        Put ("Natural");
+                        Put ("System.Storage_Elements.Storage_Offset");
                      elsif Parameter.Writeable_Array then
                         Put ("GLvoidptr");
                      elsif Parameter_Group = "Boolean" then

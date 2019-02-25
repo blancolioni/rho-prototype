@@ -87,7 +87,7 @@ package body Rho.GL_API is
       Create (File, Out_File,
               Path & "/" & Base_File_Name (Binding) & ".ads");
       Set_Output (File);
-      Put_Line ("with System;");
+      Put_Line ("with System.Storage_Elements;");
       Put_Line ("with Ada.Numerics.Generic_Real_Arrays;");
       Put_Line ("private with Ada.Containers.Indefinite_Vectors;");
       New_Line;

@@ -5,6 +5,7 @@ with Rho.Float_Buffer;
 with Rho.Rectangle;
 with Rho.Render_Target;
 with Rho.Render_Window;
+with Rho.Shaders;
 with Rho.Texture;
 
 package Rho.Rendering is
@@ -14,10 +15,10 @@ package Rho.Rendering is
    type Rho_Renderer_Record is abstract tagged limited private;
 
    procedure Render_Loop
-     (Renderer : in out Rho_Renderer_Record)
+     (Renderer : not null access Rho_Renderer_Record)
    is abstract;
 
-   procedure EXIT_Render_Loop
+   procedure Exit_Render_Loop
      (Renderer : in out Rho_Renderer_Record)
    is abstract;
 
@@ -67,6 +68,19 @@ package Rho.Rendering is
       Texture_Id   : Rho.Texture.Texture_Id;
       From_Data    : Rho.Color.Rho_Color_2D_Array)
    is abstract;
+
+   function Load_Shader
+     (Renderer : in out Rho_Renderer_Record;
+      Shader   : Rho.Shaders.Rho_Shader_Type;
+      Source   : String)
+      return Rho_Shader_Id
+      is abstract;
+
+   function Create_Program
+     (Renderer : in out Rho_Renderer_Record;
+      Shaders  : Rho.Shaders.Shader_Array)
+      return Rho_Program_Id
+      is abstract;
 
    type Rho_Renderer is access all Rho_Renderer_Record'Class;
 

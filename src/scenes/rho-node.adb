@@ -4,6 +4,7 @@ with GL;
 
 with Rho.Names;
 
+with Rho.Context;
 with Rho.Float_Arrays;
 with Rho.Logging;
 
@@ -165,10 +166,14 @@ package body Rho.Node is
    -- Create --
    ------------
 
-   function Create (Name : String) return Rho_Node is
+   function Create
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String)
+      return Rho_Node
+   is
    begin
       return Node : Rho_Node do
-         Rho_New (Node, Name);
+         Rho_New (Node, Context, Name);
       end return;
    end Create;
 
@@ -552,10 +557,13 @@ package body Rho.Node is
    -- Initialize --
    ----------------
 
-   procedure Initialize (Node : in out Rho_Node_Record;
-                         Name : String)
+   procedure Initialize
+     (Node    : in out Rho_Node_Record;
+      Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String)
    is
    begin
+      Node.Context := Context;
       Node.Set_Name (Name);
    end Initialize;
 
@@ -645,7 +653,7 @@ package body Rho.Node is
             Attr   : Instanced_Vertex_Value renames
                        Node.Instanced_Vertices (I);
             Buffer : constant Rho.Float_Buffer.Rho_Float_Buffer :=
-                       Rho.Float_Buffer.Create;
+                       Rho.Float_Buffer.Create (Node.Context);
          begin
             Buffer.Start_Vertices;
             for I in 1 .. Node.Instance_Count loop
@@ -743,12 +751,13 @@ package body Rho.Node is
    --------------
 
    procedure Rho_New
-     (Node : in out Rho_Node;
-      Name : String)
+     (Node    : in out Rho_Node;
+      Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String)
    is
    begin
       Node := new Rho_Node_Record;
-      Node.Initialize (Name);
+      Node.Initialize (Context, Name);
    end Rho_New;
 
    -----------
@@ -846,7 +855,7 @@ package body Rho.Node is
 
    procedure Set_Instance_Value
      (Node            : in out Rho_Node_Record;
-      Attribute_Value : in Rho.Shader.Rho_Attribute_Value;
+      Attribute_Value : in Rho.Shaders.Values.Rho_Attribute_Value;
       Access_Function : Float_Instance_Value_Function)
    is
    begin
@@ -860,7 +869,7 @@ package body Rho.Node is
 
    procedure Set_Instance_Value
      (Node            : in out Rho_Node_Record;
-      Attribute_Value : in Rho.Shader.Rho_Attribute_Value;
+      Attribute_Value : in Rho.Shaders.Values.Rho_Attribute_Value;
       Access_Function : Vector_3_Instance_Value_Function)
    is
    begin

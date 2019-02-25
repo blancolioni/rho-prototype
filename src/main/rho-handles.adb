@@ -1,48 +1,41 @@
-with Ada.Calendar;
-with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Exceptions;
 with Ada.Text_IO;
-
-with Rho.Assets;
-with Rho.Handles;
-with Rho.Rendering;
+with Ada.Unchecked_Deallocation;
 
 with Rho.Paths;
 
-package body Rho.Main is
+package body Rho.Handles is
 
-   package Frame_Listener_Lists is
-     new Ada.Containers.Doubly_Linked_Lists
-       (Rho.Frame_Event.Rho_Frame_Listener, Rho.Frame_Event."=");
+   ------------------------
+   -- Add_Frame_Listener --
+   ------------------------
 
-   protected Frame_Listeners is
-      procedure Add_Frame_Listener
-        (Listener : Rho.Frame_Event.Rho_Frame_Listener);
-      procedure Remove_Frame_Listener
-        (Listener : Rho.Frame_Event.Rho_Frame_Listener);
-      procedure Run_Frame_Started
-        (Event   : Rho.Frame_Event.Rho_Frame_Event);
+   procedure Add_Frame_Listener
+     (Handle   : not null access Root_Rho_Handle'Class;
+      Listener : not null access
+        Rho.Frame_Event.Rho_Frame_Listener_Interface'Class)
+   is
+   begin
+      Handle.Listeners.Add_Frame_Listener (Listener);
+   end Add_Frame_Listener;
 
-      procedure Run_Frame_Rendering_Queued
-        (Event   : Rho.Frame_Event.Rho_Frame_Event);
+   -------------------
+   -- Delete_Handle --
+   -------------------
 
-      procedure Run_Frame_Ended
-        (Event   : Rho.Frame_Event.Rho_Frame_Event);
+   procedure Delete_Handle
+     (Handle : in out Rho_Handle)
+   is
+      procedure Free is
+        new Ada.Unchecked_Deallocation (Root_Rho_Handle'Class, Rho_Handle);
+   begin
+      Free (Handle);
+      Handle := null;
+   end Delete_Handle;
 
-      procedure Update_Frame_Listener_List;
-
-   private
-      Listeners : Frame_Listener_Lists.List;
-      Added     : Frame_Listener_Lists.List;
-      Removed   : Frame_Listener_Lists.List;
-   end Frame_Listeners;
-
-   Local_Handle     : Rho.Handles.Rho_Handle;
-   Local_Renderer   : Rho.Rendering.Rho_Renderer;
-   First_Frame      : Boolean := True;
-   Last_Render_Time : Ada.Calendar.Time;
-
-   Asset_Handle : Rho.Assets.Rho_Asset_Handle;
+   ---------------------
+   -- Frame_Listeners --
+   ---------------------
 
    protected body Frame_Listeners is
 
@@ -143,94 +136,116 @@ package body Rho.Main is
 
    end Frame_Listeners;
 
-   ------------------------
-   -- Add_Frame_Listener --
-   ------------------------
-
-   procedure Add_Frame_Listener
-     (Listener : not null access
-        Rho.Frame_Event.Rho_Frame_Listener_Interface'Class)
-   is
-   begin
-      Frame_Listeners.Add_Frame_Listener
-        (Rho.Frame_Event.Rho_Frame_Listener (Listener));
-   end Add_Frame_Listener;
-
    ----------
    -- Init --
    ----------
 
    procedure Init is
    begin
-      Local_Renderer := Rho.Rendering.Create_Renderer ("gl-cairo");
-      Local_Handle := Rho.Handles.New_Handle (null);
-      Local_Handle.Use_Renderer (Local_Renderer);
-      Asset_Handle.Create_Handle (Local_Handle);
-
-      Asset_Handle.Add_Search_Path (Rho.Paths.Config_Path);
-      Asset_Handle.Add_Image_Path (Rho.Paths.Config_Path);
-      Asset_Handle.Add_Folder_Name ("texture", "textures");
-      Asset_Handle.Add_Folder_Name ("mesh", "mesh");
-      Asset_Handle.Add_Folder_Name ("material", "material");
-      Asset_Handle.Add_Folder_Name ("shader", "shaders");
-
+      null;
    end Init;
 
    ---------------------
    -- Leave_Main_Loop --
    ---------------------
 
-   procedure Leave_Main_Loop is
+   procedure Leave_Main_Loop
+     (Handle : not null access Root_Rho_Handle'Class)
+   is
    begin
-      Local_Renderer.Exit_Render_Loop;
+      Handle.Renderer.Exit_Render_Loop;
    end Leave_Main_Loop;
 
    ---------------
    -- Main_Loop --
    ---------------
 
-   procedure Main_Loop is
+   procedure Main_Loop
+     (Handle : not null access Root_Rho_Handle'Class)
+   is
    begin
-      Local_Renderer.Render_Loop;
+      Handle.Event_Source.Run (Rho_Handle (Handle));
    end Main_Loop;
+
+   --------------
+   -- Material --
+   --------------
+
+   overriding function Material
+     (Handle : not null access Root_Rho_Handle;
+      Name   : String)
+      return Rho.Materials.Material.Rho_Material
+   is
+   begin
+      return Handle.Assets.Material (Name);
+   end Material;
+
+   ----------------
+   -- New_Handle --
+   ----------------
+
+   function New_Handle
+     (Event_Source : Render_Event_Access)
+      return Rho_Handle
+   is
+   begin
+      return Handle : constant Rho_Handle :=
+        new Root_Rho_Handle'
+          (Rho.Context.Rho_Context_Record with
+             Event_Source => Event_Source,
+             others       => <>)
+      do
+         Rho.Assets.Add_Search_Path (Handle.Assets, Rho.Paths.Config_Path);
+         Rho.Assets.Add_Image_Path (Handle.Assets, Rho.Paths.Config_Path);
+         Rho.Assets.Add_Folder_Name (Handle.Assets, "texture", "textures");
+         Rho.Assets.Add_Folder_Name (Handle.Assets, "mesh", "mesh");
+         Rho.Assets.Add_Folder_Name (Handle.Assets, "material", "material");
+         Rho.Assets.Add_Folder_Name (Handle.Assets, "shader", "shaders");
+      end return;
+   end New_Handle;
 
    ---------------------------
    -- Remove_Frame_Listener --
    ---------------------------
 
    procedure Remove_Frame_Listener
-     (Listener : not null access
+     (Handle   : not null access Root_Rho_Handle'Class;
+      Listener : not null access
         Rho.Frame_Event.Rho_Frame_Listener_Interface'Class)
    is
    begin
-      Frame_Listeners.Remove_Frame_Listener (Listener);
+      Handle.Listeners.Remove_Frame_Listener (Listener);
    end Remove_Frame_Listener;
 
    ----------------------
    -- Render_One_Frame --
    ----------------------
 
-   procedure Render_One_Frame is
+   procedure Render_One_Frame
+     (Handle : not null access Root_Rho_Handle'Class)
+   is
       use Ada.Calendar;
       Now     : constant Time := Clock;
       Elapsed : constant Duration :=
-                  (if First_Frame then 0.0 else Now - Last_Render_Time);
+                  (if Handle.First_Frame
+                   then 0.0
+                   else Now - Handle.Last_Render_Time);
       Event   : constant Rho.Frame_Event.Rho_Frame_Event :=
                   (Time_Since_Last_Event => Elapsed,
                    Render_Target         =>
-                     Local_Renderer.Current_Render_Target);
+                     Handle.Renderer.Current_Render_Target);
    begin
-      Frame_Listeners.Run_Frame_Started (Event);
-      Frame_Listeners.Run_Frame_Rendering_Queued (Event);
+      Handle.Listeners.Run_Frame_Started (Event);
+      Handle.Listeners.Run_Frame_Rendering_Queued (Event);
 
-      Local_Renderer.Render_One_Frame;
+      Handle.Renderer.Render_One_Frame;
 
-      Frame_Listeners.Run_Frame_Ended (Event);
+      Handle.Listeners.Run_Frame_Ended (Event);
 
-      Frame_Listeners.Update_Frame_Listener_List;
+      Handle.Listeners.Update_Frame_Listener_List;
 
-      First_Frame := False;
-      Last_Render_Time := Now;
+      Handle.First_Frame := False;
+      Handle.Last_Render_Time := Now;
 
    exception
       when E : others =>
@@ -240,4 +255,29 @@ package body Rho.Main is
 
    end Render_One_Frame;
 
-end Rho.Main;
+   -------------
+   -- Texture --
+   -------------
+
+   overriding function Texture
+     (Handle : not null access Root_Rho_Handle;
+      Name   : String)
+      return Rho.Texture.Rho_Texture
+   is
+   begin
+      return Handle.Assets.Texture (Name);
+   end Texture;
+
+   ------------------
+   -- Use_Renderer --
+   ------------------
+
+   procedure Use_Renderer
+     (Handle   : not null access Root_Rho_Handle'Class;
+      Renderer : Rho.Rendering.Rho_Renderer)
+   is
+   begin
+      Handle.Renderer := Renderer;
+   end Use_Renderer;
+
+end Rho.Handles;

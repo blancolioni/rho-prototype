@@ -1,6 +1,8 @@
 private with Ada.Containers.Vectors;
 private with Ada.Strings.Unbounded;
 
+limited with Rho.Context;
+
 with Rho.Object;
 with Rho.Render_Target;
 with Rho.Resource;
@@ -22,6 +24,10 @@ package Rho.Materials.Material is
      (Material : Rho_Material_Record)
       return String
    is (Rho_Material_Class_Name);
+
+   function Context
+     (Material : Rho_Material_Record'Class)
+      return access Rho.Context.Rho_Context_Record'Class;
 
    procedure Activate
      (Material : in out Rho_Material_Record;
@@ -80,14 +86,18 @@ package Rho.Materials.Material is
      (Material : not null access Rho_Material_Record'Class)
       return Rho_Material;
 
-   procedure Rho_New (Material : in out Rho_Material);
+   procedure Rho_New
+     (Material : in out Rho_Material;
+      Context  : not null access Rho.Context.Rho_Context_Record'Class);
 
    function Rho_New_With_Defaults
-     return Rho_Material;
+     (Context  : not null access Rho.Context.Rho_Context_Record'Class)
+      return Rho_Material;
    --  creates the material with 1 selection and 1 pass which does nothing.
 
    function Rho_New_With_Texture
-     (Name     : String;
+     (Context  : not null access Rho.Context.Rho_Context_Record'Class;
+      Name      : String;
       Texture  : Rho.Texture.Rho_Texture;
       Lighting : Boolean := True)
       return Rho_Material;
@@ -116,9 +126,15 @@ private
       record
          Loaded            : Boolean := False;
          Instantiation     : Rho_Material := null;
+         Context           : access Rho.Context.Rho_Context_Record'Class;
          Parameters        : Parameter_Vectors.Vector;
          Techniques        : Technique_Vectors.Vector;
          Instantiated_From : Rho_Material;
       end record;
+
+   function Context
+     (Material : Rho_Material_Record'Class)
+      return access Rho.Context.Rho_Context_Record'Class
+   is (Material.Context);
 
 end Rho.Materials.Material;

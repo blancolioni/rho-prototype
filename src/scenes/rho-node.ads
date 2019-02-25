@@ -10,7 +10,9 @@ with Rho.Orientable;
 with Rho.Rectangle;
 with Rho.Renderable;
 with Rho.Render_Target;
-with Rho.Shader;
+with Rho.Shaders.Values;
+
+limited with Rho.Context;
 
 package Rho.Node is
 
@@ -24,13 +26,20 @@ package Rho.Node is
 
    type Rho_Node is access all Rho_Node_Record'Class;
 
-   procedure Rho_New (Node : in out Rho_Node;
-                     Name : String);
+   procedure Rho_New
+     (Node    : in out Rho_Node;
+      Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String);
 
-   procedure Initialize (Node : in out Rho_Node_Record;
-                         Name : String);
+   procedure Initialize
+     (Node    : in out Rho_Node_Record;
+      Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String);
 
-   function Create (Name : String) return Rho_Node;
+   function Create
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String)
+      return Rho_Node;
 
    overriding function Loaded
      (Node : Rho_Node_Record)
@@ -124,7 +133,7 @@ package Rho.Node is
 
    procedure Set_Instance_Value
      (Node            : in out Rho_Node_Record;
-      Attribute_Value : in Rho.Shader.Rho_Attribute_Value;
+      Attribute_Value : in Rho.Shaders.Values.Rho_Attribute_Value;
       Access_Function : Float_Instance_Value_Function);
 
    type Vector_3_Instance_Value_Function is access
@@ -133,7 +142,7 @@ package Rho.Node is
 
    procedure Set_Instance_Value
      (Node            : in out Rho_Node_Record;
-      Attribute_Value : in Rho.Shader.Rho_Attribute_Value;
+      Attribute_Value : in Rho.Shaders.Values.Rho_Attribute_Value;
       Access_Function : Vector_3_Instance_Value_Function);
 
    procedure Scale
@@ -220,7 +229,7 @@ private
 
    type Bound_Vertex_Value is
       record
-         Value          : Rho.Shader.Rho_Attribute_Value;
+         Value          : Rho.Shaders.Values.Rho_Attribute_Value;
          Buffer         : Rho.Float_Buffer.Rho_Float_Buffer;
          Start          : Positive;
          Component_Size : Positive;
@@ -236,7 +245,7 @@ private
      (Length : Instanced_Vertex_Attribute_Length := 1)
    is
       record
-         Value  : Rho.Shader.Rho_Attribute_Value;
+         Value  : Rho.Shaders.Values.Rho_Attribute_Value;
          Buffer : Rho.Float_Buffer.Rho_Float_Buffer;
          case Length is
             when 1 =>
@@ -274,6 +283,7 @@ private
          View_Matrix_Cached  : Boolean := False;
          Clear_Child_Cache   : Boolean := True;
          Changed             : Boolean;
+         Context             : access Rho.Context.Rho_Context_Record'Class;
          Entity              : Rho.Entity.Rho_Entity;
          Parent              : Rho_Node;
          Children            : Node_Vectors.Vector;

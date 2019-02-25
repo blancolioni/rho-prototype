@@ -5,23 +5,15 @@ with Rho.Rendering.WebGL_Renderer.WebGL_Window;
 with Gnoga.Gui.Element.Common;
 with Gnoga.Gui.Element.Canvas.Context_WebGL;
 
-with Interfaces.C;
-
 with System;
 
 with Glib;
+with Cairo.Surface;
 with Cairo.Image_Surface;
 
 package body Rho.Rendering.WebGL_Renderer is
 
    use Gnoga.Gui.Element.Canvas.Context_WebGL;
-
-   task type Render_Task_Type is
-      entry Start (Renderer : Rho_Renderer);
-      entry Stop;
-   end Render_Task_Type;
-
-   type Render_Task_Access is access Render_Task_Type;
 
    type Rho_WebGL_Renderer_Record is
      new Rho_Renderer_Record with
@@ -30,7 +22,6 @@ package body Rho.Rendering.WebGL_Renderer is
          Top_Window     : WebGL_Window.Rho_WebGL_Window;
          Context        : Context_WebGL_Access;
          Active_Texture : Rho.Texture.Texture_Id;
-         Render_Task    : Render_Task_Access;
       end record;
 
    type Rho_GL_Renderer is access all Rho_WebGL_Renderer_Record'Class;
@@ -41,7 +32,7 @@ package body Rho.Rendering.WebGL_Renderer is
    is (Rho.Render_Target.Rho_Render_Target (Renderer.Top_Window));
 
    overriding procedure Render_Loop
-     (Renderer : in out Rho_WebGL_Renderer_Record);
+     (Renderer : not null access Rho_WebGL_Renderer_Record);
 
    overriding procedure Exit_Render_Loop
      (Renderer : in out Rho_WebGL_Renderer_Record);
@@ -81,6 +72,36 @@ package body Rho.Rendering.WebGL_Renderer is
       Buffer   : Rho.Float_Buffer.Rho_Float_Buffer_Record'Class)
       return Rho.Float_Buffer.Rho_Float_Buffer_Id;
 
+   overriding function Load_Shader
+     (Renderer : in out Rho_WebGL_Renderer_Record;
+      Shader   : Rho.Shaders.Rho_Shader_Type;
+      Source   : String)
+      return Rho_Shader_Id;
+
+   overriding function Create_Program
+     (Renderer : in out Rho_WebGL_Renderer_Record;
+      Shaders  : Rho.Shaders.Shader_Array)
+      return Rho_Program_Id;
+
+   --------------------
+   -- Create_Program --
+   --------------------
+
+   overriding function Create_Program
+     (Renderer : in out Rho_WebGL_Renderer_Record;
+      Shaders  : Rho.Shaders.Shader_Array)
+      return Rho_Program_Id
+   is
+      GL : constant Context_WebGL_Access := Renderer.Context;
+      Id : constant GLuint := GL.Create_Program;
+   begin
+      for Shader_Id of Shaders loop
+         GL.Attach_Shader (Id, GLuint (Shader_Id));
+      end loop;
+      GL.Link_Program (Id);
+      return Rho_Program_Id (Id);
+   end Create_Program;
+
    --------------------
    -- Create_Surface --
    --------------------
@@ -109,11 +130,13 @@ package body Rho.Rendering.WebGL_Renderer is
    begin
 
       Renderer.Top_Window :=
-        WebGL_Window.Create_Top_Level_Window;
+        WebGL_Window.Create_Top_Level_Window (Renderer.Parent_Element);
 
       Renderer.Top_Window.Set_Back_Face_Removal (True);
       Renderer.Top_Window.Set_Wireframe (False);
       Renderer.Top_Window.Set_Depth_Test (True);
+
+      Renderer.Context := Renderer.Top_Window.Context;
 
       return Rho.Render_Window.Rho_Render_Window (Renderer.Top_Window);
    end Create_Top_Level_Window;
@@ -141,10 +164,7 @@ package body Rho.Rendering.WebGL_Renderer is
 
    overriding procedure Exit_Render_Loop
      (Renderer : in out Rho_WebGL_Renderer_Record)
-   is
-   begin
-      Renderer.Render_Task.Stop;
-   end Exit_Render_Loop;
+   is null;
 
    -----------------
    -- Load_Buffer --
@@ -207,21 +227,21 @@ package body Rho.Rendering.WebGL_Renderer is
 --     function Load_Program
 --       (Vertex_Shader_Path   : String;
 --        Fragment_Shader_Path : String)
---        return Rho.Shader.Rho_Program
+--        return Rho.Shaders.Rho_Program
 --     is
 --
---        Vertex_Shader   : constant Rho.Shader.Rho_Shader :=
---                            Rho.Shader.Load (Rho.Paths.Config_Path
+--        Vertex_Shader   : constant Rho.Shaders.Rho_Shader :=
+--                            Rho.Shaders.Load (Rho.Paths.Config_Path
 --                                            & "/shaders/"
 --                                            & Vertex_Shader_Path,
---                                            Rho.Shader.Vertex);
---        Fragment_Shader : constant Rho.Shader.Rho_Shader :=
---                            Rho.Shader.Load (Rho.Paths.Config_Path
+--                                            Rho.Shaders.Vertex);
+--        Fragment_Shader : constant Rho.Shaders.Rho_Shader :=
+--                            Rho.Shaders.Load (Rho.Paths.Config_Path
 --                                            & "/shaders/"
 --                                            & Fragment_Shader_Path,
---                                            Rho.Shader.Fragment);
---        Result          : constant Rho.Shader.Rho_Program :=
---                            Rho.Shader.Create;
+--                                            Rho.Shaders.Fragment);
+--        Result          : constant Rho.Shaders.Rho_Program :=
+--                            Rho.Shaders.Create;
 --     begin
 --        Result.Add (Vertex_Shader);
 --        Result.Add (Fragment_Shader);
@@ -231,6 +251,33 @@ package body Rho.Rendering.WebGL_Renderer is
 --        return Result;
 --
 --     end Load_Program;
+
+   -----------------
+   -- Load_Shader --
+   -----------------
+
+   overriding function Load_Shader
+     (Renderer : in out Rho_WebGL_Renderer_Record;
+      Shader   : Rho.Shaders.Rho_Shader_Type;
+      Source   : String)
+      return Rho_Shader_Id
+   is
+      GL : constant Context_WebGL_Access := Renderer.Context;
+      Id : constant GLuint :=
+             GL.Create_Shader
+               (case Shader is
+                   when Rho.Shaders.Vertex_Shader   => GL_Vertex_Shader,
+                   when Rho.Shaders.Fragment_Shader => GL_Fragment_Shader);
+   begin
+
+      GL.Shader_Source
+        (Shader => Id,
+         Source => Source);
+
+      GL.Compile_Shader (Id);
+
+      return Rho_Shader_Id (Id);
+   end Load_Shader;
 
    ------------------
    -- Load_Texture --
@@ -243,6 +290,7 @@ package body Rho.Rendering.WebGL_Renderer is
       Mag_Filter   : Rho.Texture.Texture_Filter_Type)
       return Rho.Texture.Texture_Id
    is
+      pragma Unreferenced (Mag_Filter);
       use Rho.Texture;
 
       GL : constant Context_WebGL_Access := Renderer.Context;
@@ -255,11 +303,12 @@ package body Rho.Rendering.WebGL_Renderer is
       To_GL_Filter          : constant array (Texture_Filter_Type)
         of Texture_Mag_Filter :=
           (Nearest => GL_Nearest, Linear => GL_Linear);
+      pragma Unreferenced (To_GL_Filter);
 
       GL_S_Wrap     : constant Texture_Wrap_Mode := To_GL_Wrap (S_Wrap);
       GL_T_Wrap     : constant Texture_Wrap_Mode := To_GL_Wrap (T_Wrap);
-      GL_Mag_Filter : constant Texture_Mag_Filter :=
-                        To_GL_Filter (Mag_Filter);
+--        GL_Mag_Filter : constant Texture_Mag_Filter :=
+--                          To_GL_Filter (Mag_Filter);
 
       --        function Tex_Arg is
       --          new Ada.Unchecked_Conversion (GL.Texture_Wrap_Mode, GL.Int);
@@ -297,38 +346,35 @@ package body Rho.Rendering.WebGL_Renderer is
       Texture_Id   : Rho.Texture.Texture_Id;
       From_Data    : Rho.Color.Rho_Color_2D_Array)
    is
-      Width : constant GLint := GLint (From_Data'Length (1));
-      Height : constant GLint := GLint (From_Data'Length (2));
+      Width : constant Natural := From_Data'Length (1);
+      Height : constant Natural := From_Data'Length (2);
 
-      Dest_Data   : Aliased_Ubyte_Array_Access;
+      Dest_Data   : Uint8_Array (1 .. 4 * Width * Height);
    begin
       if Height = 0 or else Width = 0 then
          return;
       end if;
-
-      Dest_Data :=
-        new Aliased_Ubyte_Array (0 .. 4 * Width * Height - 1);
 
       for Y in 0 .. Height - 1 loop
          for X in 0 .. Width - 1 loop
             declare
                Src_X        : constant Positive := Positive (X + 1);
                Src_Y        : constant Positive := Positive (Y + 1);
-               Dest_Index   : constant Int :=
-                                4 * X + (Height - Y - 1) * Width * 4;
+               Dest_Index   : constant Positive :=
+                                1 + 4 * X + (Height - Y - 1) * Width * 4;
 
-               function To_Ubyte (X : Unit_Float) return Ubyte
-               is (Ubyte (X * 255.0));
+               function To_Uint8 (X : Unit_Float) return GLuint8
+               is (GLuint8 (X * 255.0));
 
             begin
                Dest_Data (Dest_Index) :=
-                 To_Ubyte (From_Data (Src_X, Src_Y).Red);
+                 To_Uint8 (From_Data (Src_X, Src_Y).Red);
                Dest_Data (Dest_Index + 1) :=
-                 To_Ubyte (From_Data (Src_X, Src_Y).Green);
+                 To_Uint8 (From_Data (Src_X, Src_Y).Green);
                Dest_Data (Dest_Index + 2) :=
-                 To_Ubyte (From_Data (Src_X, Src_Y).Blue);
+                 To_Uint8 (From_Data (Src_X, Src_Y).Blue);
                Dest_Data (Dest_Index + 3) :=
-                 To_Ubyte (From_Data (Src_X, Src_Y).Alpha);
+                 To_Uint8 (From_Data (Src_X, Src_Y).Alpha);
             end;
          end loop;
       end loop;
@@ -337,23 +383,21 @@ package body Rho.Rendering.WebGL_Renderer is
          use type Rho.Texture.Texture_Id;
       begin
          if Renderer.Active_Texture /= Texture_Id then
-            GL.Bind_Texture (GL_TEXTURE_2D, Uint (Texture_Id));
+            Renderer.Context.Bind_Texture (GL_Texture_2d, GLuint (Texture_Id));
             Renderer.Active_Texture := Texture_Id;
          end if;
       end;
 
-      GL.Tex_Image_2D
-        (Target          => GL_TEXTURE_2D,
-         Level           => 0,
-         Internal_Format => GL_RGBA,
-         Width           => Sizei (Width),
-         Height          => Sizei (Height),
-         Border          => 0,
-         Format          => GL_RGBA,
-         Ptype           => GL_UNSIGNED_BYTE,
-         Pixels          => Dest_Data (0)'Address);
-
-      Free (Dest_Data);
+      Renderer.Context.Tex_Image_2D
+        (Target         => GL_Texture_2d,
+         Level          => 0,
+         Internalformat => GL_Rgba,
+         Width          => GLsizei (Width),
+         Height         => GLsizei (Height),
+         Border         => 0,
+         Format         => GL_Rgba,
+         Item_Type      => GL_Unsigned_Byte,
+         Pixels         => Dest_Data);
 
    end Load_Texture_Data;
 
@@ -381,25 +425,24 @@ package body Rho.Rendering.WebGL_Renderer is
       Width      : constant Natural := Natural (Region.Width);
       Height     : constant Natural := Natural (Region.Height);
 
-      type Source_Data_Array is array (Gint range <>) of aliased Ubyte;
-      Source_Data : Source_Data_Array (0 .. Stride * Src_Height - 1);
+      Source_Data : Uint8_Array (1 .. Natural (Stride * Src_Height));
       for Source_Data'Address use Data;
       Dest_Data : Rho.Color.Rho_Color_2D_Array_Access;
 
-      procedure Set_Dest (Source_Index : Gint;
+      procedure Set_Dest (Source_Index : Positive;
                           X, Y         : Positive);
 
       --------------
       -- Set_Dest --
       --------------
 
-      procedure Set_Dest (Source_Index : Gint;
+      procedure Set_Dest (Source_Index : Positive;
                           X, Y         : Positive)
       is
-         Red   : constant Ubyte := Source_Data (Source_Index + 2);
-         Green : constant Ubyte := Source_Data (Source_Index + 1);
-         Blue  : constant Ubyte := Source_Data (Source_Index + 0);
-         Alpha : constant Ubyte := Source_Data (Source_Index + 3);
+         Red   : constant GLuint8 := Source_Data (Source_Index + 2);
+         Green : constant GLuint8 := Source_Data (Source_Index + 1);
+         Blue  : constant GLuint8 := Source_Data (Source_Index + 0);
+         Alpha : constant GLuint8 := Source_Data (Source_Index + 3);
       begin
          Dest_Data (X, Y) :=
            (Red   => Rho_Float (Red) / 255.0,
@@ -429,7 +472,7 @@ package body Rho.Rendering.WebGL_Renderer is
                                  else 0);
             begin
                if Src_X < Src_Width and then Src_Y < Src_Height then
-                  Set_Dest (Source_Index, X + 1, Y + 1);
+                  Set_Dest (Natural (Source_Index) + 1, X + 1, Y + 1);
                else
                   Dest_Data (X + 1, Y + 1) := (0.0, 0.0, 0.0, 0.0);
                end if;
@@ -449,12 +492,8 @@ package body Rho.Rendering.WebGL_Renderer is
    -----------------
 
    overriding procedure Render_Loop
-     (Renderer : in out Rho_WebGL_Renderer_Record)
-   is
-      pragma Unreferenced (Renderer);
-   begin
-      GLUT.Main_Loop;
-   end Render_Loop;
+     (Renderer : not null access Rho_WebGL_Renderer_Record)
+   is null;
 
    ----------------------
    -- Render_One_Frame --
@@ -466,5 +505,36 @@ package body Rho.Rendering.WebGL_Renderer is
    begin
       Renderer.Top_Window.Render;
    end Render_One_Frame;
+
+   -----------------
+   -- Render_Task --
+   -----------------
+
+   task body Render_Task_Type is
+      Rho_Handle : Rho.Handles.Rho_Handle;
+   begin
+      accept Run (Handle : in Rho.Handles.Rho_Handle) do
+         Rho_Handle := Handle;
+      end Run;
+
+      loop
+         select
+            accept Stop;
+            exit;
+         else
+            delay 0.02;
+            Rho_Handle.Render_One_Frame;
+         end select;
+      end loop;
+   end Render_Task_Type;
+
+   ------------------------
+   -- WebGL_Event_Source --
+   ------------------------
+
+   function WebGL_Event_Source return Rho.Handles.Render_Event_Access is
+   begin
+      return new Render_Task_Type;
+   end WebGL_Event_Source;
 
 end Rho.Rendering.WebGL_Renderer;

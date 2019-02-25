@@ -3,10 +3,14 @@ with Ada.Strings.Unbounded;
 with Rho.Logging;
 
 with Rho.Float_Arrays;
-with Rho.Shader.Load;
+with Rho.Shaders.Loader;
+with Rho.Shaders.Program;
+with Rho.Shaders.Shader;
 
 with Rho.Materials.Material;
 with Rho.Materials.Templates;
+
+with Rho.Context;
 
 with Rho.Paths;
 
@@ -23,7 +27,7 @@ package body Rho.Materials.Pass is
 
    package Shader_Caches is
      new Rho.Materials.Templates.Material_Template_Caches
-       (Rho.Shader.Rho_Shader_Record, Rho.Shader.Rho_Shader);
+       (Rho.Shaders.Rho_Shader_Interface, Rho.Shaders.Rho_Shader);
 
    Shader_Cache : Shader_Caches.Cache;
 
@@ -166,41 +170,35 @@ package body Rho.Materials.Pass is
    procedure Bind_Standard_Attributes
      (Pass : in out Rho_Material_Pass_Record'Class)
    is
+      Shader : constant Rho.Shaders.Program.Rho_Program :=
+                 Rho.Shaders.Program.Rho_Program (Pass.Shader);
    begin
-      Pass.Attributes.Append
-        (Pass.Shader.Attribute_Value ("vert"));
-      Pass.Attributes.Append
-        (Pass.Shader.Attribute_Value ("vertNormal"));
-      Pass.Attributes.Append
-        (Pass.Shader.Attribute_Value ("vertTexCoord"));
-      Pass.Attributes.Append
-        (Pass.Shader.Attribute_Value ("vertColor"));
+      Pass.Attributes.Append (Shader.Attribute_Value ("vert"));
+      Pass.Attributes.Append (Shader.Attribute_Value ("vertNormal"));
+      Pass.Attributes.Append (Shader.Attribute_Value ("vertTexCoord"));
+      Pass.Attributes.Append (Shader.Attribute_Value ("vertColor"));
 
       if Pass.Has_Texture then
-         Pass.Texture_Uniform :=
-           Pass.Shader.Uniform_Value ("materialTex");
+         Pass.Texture_Uniform := Shader.Uniform_Value ("materialTex");
       end if;
 
       if Pass.Lighting_Enabled then
          declare
             Uniforms : Light_Uniforms renames Pass.Lights (1);
          begin
-            Uniforms.Position :=
-              Pass.Shader.Uniform_Value ("light.position");
-            Uniforms.Intensities :=
-              Pass.Shader.Uniform_Value ("light.intensities");
-            Uniforms.Attenuation :=
-              Pass.Shader.Uniform_Value ("light.attenuation");
+            Uniforms.Position := Shader.Uniform_Value ("light.position");
+            Uniforms.Intensities := Shader.Uniform_Value ("light.intensities");
+            Uniforms.Attenuation := Shader.Uniform_Value ("light.attenuation");
             Uniforms.Ambient_Coefficient :=
-              Pass.Shader.Uniform_Value ("light.ambientCoefficient");
+              Shader.Uniform_Value ("light.ambientCoefficient");
          end;
 
          Pass.Shininess_Uniform :=
-           Pass.Shader.Uniform_Value ("materialShininess");
+           Shader.Uniform_Value ("materialShininess");
          Pass.Specular_Uniform :=
-           Pass.Shader.Uniform_Value ("materialSpecularColor");
+           Shader.Uniform_Value ("materialSpecularColor");
          Pass.Camera_Uniform :=
-           Pass.Shader.Uniform_Value ("cameraPosition");
+           Shader.Uniform_Value ("cameraPosition");
       end if;
 
    end Bind_Standard_Attributes;
@@ -211,7 +209,7 @@ package body Rho.Materials.Pass is
 
    function Color_Attribute
      (Pass : Rho_Material_Pass_Record'Class)
-      return Rho.Shader.Rho_Attribute_Value
+      return Rho.Shaders.Values.Rho_Attribute_Value
    is
    begin
       return Pass.Attributes (Color_Attribute_Index);
@@ -238,12 +236,12 @@ package body Rho.Materials.Pass is
    procedure Create_Shader
      (Pass : in out Rho_Material_Pass_Record'Class)
    is
-      use type Rho.Shader.Rho_Shader;
+      use type Rho.Shaders.Rho_Shader;
 
       use all type Rho.Texture.Texture_Address_Mode;
 
-      Vertex   : Rho.Shader.Rho_Vertex_Shader;
-      Fragment : Rho.Shader.Rho_Fragment_Shader;
+      Vertex   : Rho.Shaders.Shader.Rho_Shader;
+      Fragment : Rho.Shaders.Shader.Rho_Shader;
 
       function Unit_Float_Image (Value : Unit_Float) return String;
 
@@ -394,7 +392,10 @@ package body Rho.Materials.Pass is
                                  Write_Result => Write_Shader_Source);
          begin
             Vertex :=
-              Rho.Shader.Load.Create_From_Source (Vertex_Source);
+              Rho.Shaders.Loader.Create_From_Source
+                (Pass.Technique.Material.Context.Renderer,
+                 Rho.Shaders.Vertex_Shader,
+                 Vertex_Source);
          end;
 
          declare
@@ -405,15 +406,24 @@ package body Rho.Materials.Pass is
                                    Write_Result => Write_Shader_Source);
          begin
             Fragment :=
-              Rho.Shader.Load.Create_From_Source (Fragment_Source);
+              Rho.Shaders.Loader.Create_From_Source
+                (Pass.Technique.Material.Context.Renderer,
+                 Rho.Shaders.Fragment_Shader, Fragment_Source);
          end;
 
-         Pass.Shader := Rho.Shader.Create;
-         Pass.Shader.Add (Vertex);
-         Pass.Shader.Add (Fragment);
-         Pass.Shader.Compile;
+         declare
+            Program : constant Rho.Shaders.Program.Rho_Program :=
+                        Rho.Shaders.Program.Create
+                          (Pass.Technique.Material.Context.Renderer);
+         begin
+            Program.Add (Vertex);
+            Program.Add (Fragment);
+            Program.Compile;
+            Pass.Shader := Rho.Shaders.Rho_Shader (Program);
 
-         Shader_Cache.Insert (Template, Pass.Shader);
+            Shader_Cache.Insert (Template, Pass.Shader);
+         end;
+
       end if;
 
       Pass.Bind_Standard_Attributes;
@@ -478,6 +488,29 @@ package body Rho.Materials.Pass is
       return Pass.Properties.Get_Property (Name);
    end Get_Property;
 
+   ----------------
+   -- Get_Shader --
+   ----------------
+
+   overriding function Get_Shader
+     (Pass : in out Rho_Material_Pass_Record)
+      return Rho.Shaders.Rho_Shader
+   is
+      use type Rho.Shaders.Rho_Shader;
+   begin
+      if Pass.Shader = null then
+         Rho.Logging.Put_Line
+           (Pass.Technique.Material.Name
+            & ": creating shader");
+         if Pass.Instantiation = null then
+            Pass.Create_Shader;
+         else
+            Pass.Instantiate_Shader;
+         end if;
+      end if;
+      return Pass.Shader;
+   end Get_Shader;
+
    -----------------------
    -- Has_Ambient_Light --
    -----------------------
@@ -499,7 +532,7 @@ package body Rho.Materials.Pass is
      (Pass : Rho_Material_Pass_Record'Class)
       return Boolean
    is
-      use type Rho.Shader.Rho_Attribute_Value;
+      use type Rho.Shaders.Values.Rho_Attribute_Value;
    begin
       return Pass.Attributes (Color_Attribute_Index) /= null;
    end Has_Color_Attribute;
@@ -538,7 +571,7 @@ package body Rho.Materials.Pass is
      (Pass : Rho_Material_Pass_Record'Class)
       return Boolean
    is
-      use type Rho.Shader.Rho_Attribute_Value;
+      use type Rho.Shaders.Values.Rho_Attribute_Value;
    begin
       return Pass.Attributes (Normal_Attribute_Index) /= null;
    end Has_Normal_Attribute;
@@ -589,7 +622,7 @@ package body Rho.Materials.Pass is
      (Pass : Rho_Material_Pass_Record'Class)
       return Boolean
    is
-      use type Rho.Shader.Rho_Attribute_Value;
+      use type Rho.Shaders.Values.Rho_Attribute_Value;
    begin
       return Pass.Attributes (Texture_Attribute_Index) /= null;
    end Has_Texture_Coordinate_Attribute;
@@ -600,7 +633,7 @@ package body Rho.Materials.Pass is
 
    function Instanced_Color_Attribute
      (Pass : Rho_Material_Pass_Record'Class)
-      return Rho.Shader.Rho_Attribute_Value
+      return Rho.Shaders.Values.Rho_Attribute_Value
    is
    begin
       return Pass.Attributes (Instanced_Color_Index);
@@ -612,7 +645,7 @@ package body Rho.Materials.Pass is
 
    function Instanced_Position_Attribute
      (Pass : Rho_Material_Pass_Record'Class)
-      return Rho.Shader.Rho_Attribute_Value
+      return Rho.Shaders.Values.Rho_Attribute_Value
    is
    begin
       return Pass.Attributes (Instanced_Position_Index);
@@ -658,8 +691,10 @@ package body Rho.Materials.Pass is
          Value : Rho.Value.Rho_Value)
       is
          pragma Unreferenced (Value);
-         Uniform : constant Rho.Shader.Rho_Uniform_Value :=
-                     Pass.Shader.Uniform_Value
+         Program : constant Rho.Shaders.Program.Rho_Program :=
+                     Rho.Shaders.Program.Rho_Program (Pass.Shader);
+         Uniform : constant Rho.Shaders.Values.Rho_Uniform_Value :=
+                     Program.Uniform_Value
                        ("Rho_param_" & Name);
       begin
          Pass.Parameter_Uniforms.Append (Uniform);
@@ -691,7 +726,7 @@ package body Rho.Materials.Pass is
    procedure Load
      (Pass : in out Rho_Material_Pass_Record'Class)
    is
-      use type Rho.Shader.Rho_Shader;
+      use type Rho.Shaders.Rho_Shader;
    begin
       if Pass.Shader = null then
          if Pass.Instantiation = null then
@@ -708,7 +743,7 @@ package body Rho.Materials.Pass is
 
    function Normal_Attribute
      (Pass : Rho_Material_Pass_Record'Class)
-      return Rho.Shader.Rho_Attribute_Value
+      return Rho.Shaders.Values.Rho_Attribute_Value
    is
    begin
       return Pass.Attributes (Normal_Attribute_Index);
@@ -732,7 +767,7 @@ package body Rho.Materials.Pass is
 
    function Position_Attribute
      (Pass : Rho_Material_Pass_Record'Class)
-      return Rho.Shader.Rho_Attribute_Value
+      return Rho.Shaders.Values.Rho_Attribute_Value
    is
    begin
       return Pass.Attributes (Position_Attribute_Index);
@@ -834,7 +869,7 @@ package body Rho.Materials.Pass is
 
    overriding procedure Set_Shader
      (Pass   : in out Rho_Material_Pass_Record;
-      Shader : Rho.Shader.Rho_Shader)
+      Shader : Rho.Shaders.Rho_Shader)
    is
    begin
       Pass.Shader := Shader;
@@ -891,29 +926,6 @@ package body Rho.Materials.Pass is
    begin
       Pass.Tex_Address_Mode := Mode;
    end Set_Texture_Address_Mode;
-
-   ------------
-   -- Shader --
-   ------------
-
-   overriding function Shader
-     (Pass : in out Rho_Material_Pass_Record)
-      return Rho.Shader.Rho_Shader
-   is
-      use type Rho.Shader.Rho_Shader;
-   begin
-      if Pass.Shader = null then
-         Rho.Logging.Put_Line
-           (Pass.Technique.Material.Name
-            & ": creating shader");
-         if Pass.Instantiation = null then
-            Pass.Create_Shader;
-         else
-            Pass.Instantiate_Shader;
-         end if;
-      end if;
-      return Pass.Shader;
-   end Shader;
 
    ---------------
    -- Shininess --
@@ -981,7 +993,7 @@ package body Rho.Materials.Pass is
 
    function Texture_Coordinate_Attribute
      (Pass : Rho_Material_Pass_Record'Class)
-      return Rho.Shader.Rho_Attribute_Value
+      return Rho.Shaders.Values.Rho_Attribute_Value
    is
    begin
       return Pass.Attributes (Texture_Attribute_Index);

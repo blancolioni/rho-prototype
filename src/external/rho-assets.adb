@@ -1,40 +1,22 @@
 with Ada.Characters.Handling;
-with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Directories;
 with Ada.Text_IO;
 
 with Rho.Logging;
 
-with Rho.Object;
-with Rho.String_Maps;
-
 with Rho.Materials.Loader;
 with Rho.Mesh.Reader;
-with Rho.Shader.Load;
+with Rho.Shaders.Loader;
+with Rho.Shaders.Program;
 with Rho.Texture.Loader;
+
+with Rho.Context;
 
 package body Rho.Assets is
 
-   package Search_Path_Lists is
-     new Ada.Containers.Indefinite_Doubly_Linked_Lists (String);
-
-   package Asset_Map is
-     new Rho.String_Maps (Rho.Object.Rho_Object,
-                         Rho.Object."=");
-
-   package String_Lists is
-     new Ada.Containers.Indefinite_Doubly_Linked_Lists (String);
-
-   package Resource_Folder_Map is
-      new Rho.String_Maps (String_Lists.List, String_Lists."=");
-
-   Search_Paths : Search_Path_Lists.List;
-   Image_Paths  : Search_Path_Lists.List;
-   Assets       : Asset_Map.Map;
-   Folders      : Resource_Folder_Map.Map;
-
    function Get_Asset
-     (Class_Name : String;
+     (Handle     : in out Rho_Asset_Handle;
+      Class_Name : String;
       Name       : String;
       Loader     : not null access
         function (Path : String) return Rho.Object.Rho_Object)
@@ -50,14 +32,15 @@ package body Rho.Assets is
    ---------------------
 
    procedure Add_Folder_Name
-     (Class_Name  : String;
+     (Handle      : in out Rho_Asset_Handle;
+      Class_Name  : String;
       Folder_Name : String)
    is
    begin
-      if not Folders.Contains (Class_Name) then
-         Folders.Insert (Class_Name, String_Lists.Empty_List);
+      if not Handle.Folders.Contains (Class_Name) then
+         Handle.Folders.Insert (Class_Name, String_Lists.Empty_List);
       end if;
-      Folders (Class_Name).Append (Folder_Name);
+      Handle.Folders (Class_Name).Append (Folder_Name);
    end Add_Folder_Name;
 
    --------------------
@@ -65,10 +48,11 @@ package body Rho.Assets is
    --------------------
 
    procedure Add_Image_Path
-     (Path : String)
+     (Handle : in out Rho_Asset_Handle;
+      Path   : String)
    is
    begin
-      Image_Paths.Append (Path);
+      Handle.Image_Paths.Append (Path);
    end Add_Image_Path;
 
    ---------------------
@@ -76,18 +60,28 @@ package body Rho.Assets is
    ---------------------
 
    procedure Add_Search_Path
-     (Path : String)
+     (Handle : in out Rho_Asset_Handle;
+      Path   : String)
    is
    begin
-      Search_Paths.Append (Path);
+      Handle.Search_Paths.Append (Path);
    end Add_Search_Path;
+
+   procedure Create_Handle
+     (Handle   : in out Rho_Asset_Handle;
+      Context  : not null access Rho.Context.Rho_Context_Record'Class)
+   is
+   begin
+      Handle.Context := Context;
+   end Create_Handle;
 
    ---------------
    -- Get_Asset --
    ---------------
 
    function Get_Asset
-     (Class_Name : String;
+     (Handle     : in out Rho_Asset_Handle;
+      Class_Name : String;
       Name       : String;
       Loader     : not null access
         function (Path : String) return Rho.Object.Rho_Object)
@@ -95,24 +89,24 @@ package body Rho.Assets is
    is
       Key : constant String := "[" & Class_Name & "] " & Name;
 
-      function EMaassting_File_Path
+      function Existing_File_Path
         (Base_Path : String;
          File_Name : String)
          return String;
 
       ------------------------
-      -- EMaassting_File_Path --
+      -- Existing_File_Path --
       ------------------------
 
-      function EMaassting_File_Path
+      function Existing_File_Path
         (Base_Path : String;
          File_Name : String)
          return String
       is
          use Ada.Directories;
       begin
-         if Folders.Contains (Class_Name) then
-            for Folder_Name of Folders (Class_Name) loop
+         if Handle.Folders.Contains (Class_Name) then
+            for Folder_Name of Handle.Folders (Class_Name) loop
                declare
                   Path : constant String :=
                            Compose
@@ -126,21 +120,21 @@ package body Rho.Assets is
             end loop;
          end if;
          return "";
-      end EMaassting_File_Path;
+      end Existing_File_Path;
 
    begin
 
-      if Assets.Contains (Key) then
-         return Assets.Element (Key);
+      if Handle.Assets.Contains (Key) then
+         return Handle.Assets.Element (Key);
       end if;
 
       declare
          File_Name : constant String := To_File_Name (Class_Name, Name);
       begin
-         for Path of Search_Paths loop
+         for Path of Handle.Search_Paths loop
             declare
                File_Path : constant String :=
-                             EMaassting_File_Path (Path, File_Name);
+                             Existing_File_Path (Path, File_Name);
             begin
                if File_Path /= "" then
                   declare
@@ -149,7 +143,7 @@ package body Rho.Assets is
                                 Loader (File_Path);
                   begin
                      if Result /= null then
-                        Assets.Insert (Key, Result);
+                        Handle.Assets.Insert (Key, Result);
                         return Result;
                      end if;
                   end;
@@ -166,10 +160,10 @@ package body Rho.Assets is
          Ada.Text_IO.Put_Line
            (Ada.Text_IO.Standard_Error,
             "Warning: no default " & Class_Name & " asset found");
-         Assets.Insert ("[" & Class_Name & "] default", null);
+         Handle.Assets.Insert ("[" & Class_Name & "] default", null);
          return null;
       else
-         return Get_Asset (Class_Name, "default", Loader);
+         return Handle.Get_Asset (Class_Name, "default", Loader);
       end if;
 
    end Get_Asset;
@@ -179,11 +173,12 @@ package body Rho.Assets is
    ----------------
 
    function Image_Path
-     (Relative_Path : String)
+     (Handle        : Rho_Asset_Handle;
+      Relative_Path : String)
       return String
    is
    begin
-      for Path of Image_Paths loop
+      for Path of Handle.Image_Paths loop
          declare
             Full_Path : constant String :=
                           Path & "/" & Relative_Path;
@@ -203,15 +198,18 @@ package body Rho.Assets is
    --------------
 
    function Material
-     (Name : String)
+     (Handle : in out Rho_Asset_Handle;
+      Name   : String)
       return Rho.Materials.Material.Rho_Material
    is
       function Load (Path : String) return Rho.Object.Rho_Object
-      is (Rho.Object.Rho_Object (Rho.Materials.Loader.Load (Path)));
+      is (Rho.Object.Rho_Object
+          (Rho.Materials.Loader.Load
+           (Handle.Context, Path)));
 
    begin
       return Rho.Materials.Material.Rho_Material
-        (Get_Asset (Rho.Materials.Material.Rho_Material_Class_Name,
+        (Handle.Get_Asset (Rho.Materials.Material.Rho_Material_Class_Name,
          Name, Load'Access));
    end Material;
 
@@ -220,15 +218,17 @@ package body Rho.Assets is
    ----------
 
    function Mesh
-     (Name : String)
+     (Handle : in out Rho_Asset_Handle;
+      Name   : String)
       return Rho.Mesh.Rho_Mesh
    is
       function Load (Path : String) return Rho.Object.Rho_Object
-      is (Rho.Object.Rho_Object (Rho.Mesh.Reader.Load (Path)));
+      is (Rho.Object.Rho_Object
+          (Rho.Mesh.Reader.Load (Handle.Context, Path)));
 
    begin
       return Rho.Mesh.Rho_Mesh
-        (Get_Asset (Rho.Mesh.Rho_Mesh_Class_Name, Name, Load'Access));
+        (Handle.Get_Asset (Rho.Mesh.Rho_Mesh_Class_Name, Name, Load'Access));
    end Mesh;
 
    ------------
@@ -236,8 +236,9 @@ package body Rho.Assets is
    ------------
 
    function Shader
-     (Name : String)
-      return Rho.Shader.Rho_Shader
+     (Handle : in out Rho_Asset_Handle;
+      Name   : String)
+      return Rho.Shaders.Rho_Shader
    is
 
       function Load (Path : String) return Rho.Object.Rho_Object;
@@ -249,15 +250,18 @@ package body Rho.Assets is
       function Load (Path : String) return Rho.Object.Rho_Object is
          Base_Name : constant String :=
                        Ada.Directories.Simple_Name (Path);
-         Shader    : constant Rho.Shader.Rho_Shader :=
-                       Rho.Shader.Load.Load (Base_Name, Base_Name);
+         Program   : constant Rho.Shaders.Rho_Shader :=
+                       Rho.Shaders.Loader.Load
+                         (Handle.Context.Renderer, Base_Name, Base_Name);
       begin
-         return Rho.Object.Rho_Object (Shader);
+         return Rho.Object.Rho_Object (Program);
       end Load;
 
    begin
-      return Rho.Shader.Rho_Shader
-        (Get_Asset (Rho.Shader.Rho_Shader_Class_Name, Name, Load'Access));
+      return Rho.Shaders.Rho_Shader
+        (Handle.Get_Asset
+           (Rho.Shaders.Program.Rho_Program_Class_Name,
+            Name, Load'Access));
    end Shader;
 
    -------------
@@ -265,15 +269,20 @@ package body Rho.Assets is
    -------------
 
    function Texture
-     (Name : String)
+     (Handle : in out Rho_Asset_Handle;
+      Name   : String)
       return Rho.Texture.Rho_Texture
    is
       function Load (Path : String) return Rho.Object.Rho_Object
-      is (Rho.Object.Rho_Object (Rho.Texture.Loader.Load_Texture (Path)));
+      is (Rho.Object.Rho_Object
+          (Rho.Texture.Loader.Load_Texture
+           (Handle.Context, Path)));
 
    begin
       return Rho.Texture.Rho_Texture
-        (Get_Asset (Rho.Texture.Rho_Texture_Class_Name, Name, Load'Access));
+        (Handle.Get_Asset
+           (Rho.Texture.Rho_Texture_Class_Name,
+            Name, Load'Access));
    end Texture;
 
    ------------------

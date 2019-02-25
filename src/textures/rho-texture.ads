@@ -5,7 +5,9 @@ with WL.Images;
 with Rho.Color;
 with Rho.Object;
 with Rho.Rectangle;
-with Rho.Shader;
+with Rho.Shaders.Values;
+
+limited with Rho.Context;
 
 package Rho.Texture is
 
@@ -35,7 +37,7 @@ package Rho.Texture is
 
    procedure Set_Uniform
      (Texture : in out Rho_Texture_Record;
-      Uniform : Rho.Shader.Rho_Uniform_Value);
+      Uniform : Rho.Shaders.Values.Rho_Uniform_Value);
 
    function Has_Uniform
      (Texture : Rho_Texture_Record)
@@ -43,36 +45,42 @@ package Rho.Texture is
 
    function Uniform
      (Texture : Rho_Texture_Record)
-      return Rho.Shader.Rho_Uniform_Value
+      return Rho.Shaders.Values.Rho_Uniform_Value
      with Pre => Texture.Has_Uniform;
 
    type Rho_Texture is access all Rho_Texture_Record'Class;
 
    function Create
-     (Name : String)
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String)
      return Rho_Texture;
 
    function Create_From_Png
-     (Name : String;
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String;
       Path : String)
       return Rho_Texture;
 
    function Create_From_Surface
-     (Surface : Cairo.Cairo_Surface)
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Surface : Cairo.Cairo_Surface)
       return Rho_Texture;
 
    function Create_From_Data
-     (Name : String;
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String;
       Data : Rho.Color.Rho_Color_1D_Array)
       return Rho_Texture;
 
    function Create_From_Data
-     (Name : String;
-      Data : Rho.Color.Rho_Color_2D_Array)
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String;
+      Data    : Rho.Color.Rho_Color_2D_Array)
       return Rho_Texture;
 
    function Create_From_Image
-     (Name  : String;
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Name    : String;
       Image : WL.Images.Image_Type)
       return Rho_Texture;
 
@@ -85,13 +93,14 @@ private
      new Rho.Object.Rho_Resource_Record with
       record
          Id           : Texture_Id;
+         Context      : access Rho.Context.Rho_Context_Record'Class;
          Surface      : Cairo.Cairo_Surface;
          Data         : access Rho.Color.Rho_Color_2D_Array;
          Region       : Rho.Rectangle.Rho_Rectangle;
          S_Wrap       : Rho.Texture.Texture_Address_Mode;
          T_Wrap       : Rho.Texture.Texture_Address_Mode;
          Mag_Filter   : Rho.Texture.Texture_Filter_Type;
-         Uniform      : Rho.Shader.Rho_Uniform_Value;
+         Uniform      : Rho.Shaders.Values.Rho_Uniform_Value;
          Has_Uniform  : Boolean := False;
       end record;
 

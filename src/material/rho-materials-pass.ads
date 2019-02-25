@@ -7,7 +7,7 @@ limited with Rho.Materials.Technique;
 with Rho.Color;
 with Rho.Properties;
 with Rho.Render_Target;
-with Rho.Shader;
+with Rho.Shaders.Values;
 with Rho.Texture;
 with Rho.Value;
 
@@ -15,7 +15,7 @@ package Rho.Materials.Pass is
 
    type Rho_Material_Pass_Record is
      new Rho.Properties.Rho_Property_Container_Interface
-     and Rho.Shader.Rho_Shader_Interface
+     and Rho.Shaders.Rho_Has_Shader_Interface
    with private;
 
    type Rho_Material_Pass is access all Rho_Material_Pass_Record'Class;
@@ -107,9 +107,9 @@ package Rho.Materials.Pass is
      (Pass  : in out Rho_Material_Pass_Record;
       Value : Non_Negative_Float);
 
-   overriding function Shader
+   overriding function Get_Shader
      (Pass : in out Rho_Material_Pass_Record)
-      return Rho.Shader.Rho_Shader;
+      return Rho.Shaders.Rho_Shader;
 
    overriding function Has_Shader
      (Pass : Rho_Material_Pass_Record)
@@ -118,7 +118,7 @@ package Rho.Materials.Pass is
 
    overriding procedure Set_Shader
      (Pass   : in out Rho_Material_Pass_Record;
-      Shader : Rho.Shader.Rho_Shader);
+      Shader : Rho.Shaders.Rho_Shader);
 
    function Texture
      (Pass : Rho_Material_Pass_Record'Class)
@@ -146,7 +146,7 @@ package Rho.Materials.Pass is
 
    function Position_Attribute
      (Pass : Rho_Material_Pass_Record'Class)
-      return Rho.Shader.Rho_Attribute_Value;
+      return Rho.Shaders.Values.Rho_Attribute_Value;
 
    function Has_Normal_Attribute
      (Pass : Rho_Material_Pass_Record'Class)
@@ -154,7 +154,7 @@ package Rho.Materials.Pass is
 
    function Normal_Attribute
      (Pass : Rho_Material_Pass_Record'Class)
-      return Rho.Shader.Rho_Attribute_Value;
+      return Rho.Shaders.Values.Rho_Attribute_Value;
 
    function Has_Texture_Coordinate_Attribute
      (Pass : Rho_Material_Pass_Record'Class)
@@ -162,7 +162,7 @@ package Rho.Materials.Pass is
 
    function Texture_Coordinate_Attribute
      (Pass : Rho_Material_Pass_Record'Class)
-      return Rho.Shader.Rho_Attribute_Value;
+      return Rho.Shaders.Values.Rho_Attribute_Value;
 
    function Has_Color_Attribute
      (Pass : Rho_Material_Pass_Record'Class)
@@ -170,16 +170,16 @@ package Rho.Materials.Pass is
 
    function Color_Attribute
      (Pass : Rho_Material_Pass_Record'Class)
-      return Rho.Shader.Rho_Attribute_Value
+      return Rho.Shaders.Values.Rho_Attribute_Value
      with Pre => Pass.Has_Color_Attribute;
 
    function Instanced_Position_Attribute
      (Pass : Rho_Material_Pass_Record'Class)
-      return Rho.Shader.Rho_Attribute_Value;
+      return Rho.Shaders.Values.Rho_Attribute_Value;
 
    function Instanced_Color_Attribute
      (Pass : Rho_Material_Pass_Record'Class)
-      return Rho.Shader.Rho_Attribute_Value;
+      return Rho.Shaders.Values.Rho_Attribute_Value;
 
    procedure Alpha_Discard
      (Pass     : in out Rho_Material_Pass_Record'Class;
@@ -226,20 +226,20 @@ private
 
    package Attribute_Bindings is
      new Ada.Containers.Vectors
-       (Positive, Rho.Shader.Rho_Attribute_Value,
-        Rho.Shader."=");
+       (Positive, Rho.Shaders.Values.Rho_Attribute_Value,
+        Rho.Shaders.Values."=");
 
    package Uniform_Bindings is
      new Ada.Containers.Vectors
-       (Positive, Rho.Shader.Rho_Uniform_Value,
-        Rho.Shader."=");
+       (Positive, Rho.Shaders.Values.Rho_Uniform_Value,
+        Rho.Shaders.Values."=");
 
    type Light_Uniforms is
       record
-         Position            : Rho.Shader.Rho_Uniform_Value;
-         Intensities         : Rho.Shader.Rho_Uniform_Value;
-         Attenuation         : Rho.Shader.Rho_Uniform_Value;
-         Ambient_Coefficient : Rho.Shader.Rho_Uniform_Value;
+         Position            : Rho.Shaders.Values.Rho_Uniform_Value;
+         Intensities         : Rho.Shaders.Values.Rho_Uniform_Value;
+         Attenuation         : Rho.Shaders.Values.Rho_Uniform_Value;
+         Ambient_Coefficient : Rho.Shaders.Values.Rho_Uniform_Value;
       end record;
 
    type Array_Of_Light_Uniforms is
@@ -259,7 +259,7 @@ private
 
    type Rho_Material_Pass_Record is
      new Rho.Properties.Rho_Property_Container_Interface
-     and Rho.Shader.Rho_Shader_Interface with
+     and Rho.Shaders.Rho_Has_Shader_Interface with
       record
          Technique          : access
            Rho.Materials.Technique.Rho_Technique_Record'Class;
@@ -284,11 +284,11 @@ private
          Shininess          : Non_Negative_Float := 1.0;
          Conditions         : Condition_Vectors.Vector;
          Polygon_Mode       : Material_Polygon_Mode := Solid;
-         Shader             : Rho.Shader.Rho_Shader := null;
-         Texture_Uniform    : Rho.Shader.Rho_Uniform_Value := null;
-         Shininess_Uniform  : Rho.Shader.Rho_Uniform_Value;
-         Specular_Uniform   : Rho.Shader.Rho_Uniform_Value;
-         Camera_Uniform     : Rho.Shader.Rho_Uniform_Value;
+         Shader             : Rho.Shaders.Rho_Shader := null;
+         Texture_Uniform    : Rho.Shaders.Values.Rho_Uniform_Value := null;
+         Shininess_Uniform  : Rho.Shaders.Values.Rho_Uniform_Value;
+         Specular_Uniform   : Rho.Shaders.Values.Rho_Uniform_Value;
+         Camera_Uniform     : Rho.Shaders.Values.Rho_Uniform_Value;
          Attributes         : Attribute_Bindings.Vector;
          Parameter_Uniforms : Uniform_Bindings.Vector;
          Lights             : Array_Of_Light_Uniforms;

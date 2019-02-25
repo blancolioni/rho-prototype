@@ -1,7 +1,5 @@
 with Rho.Frame_Event;
 
-with Rho.Rendering;
-
 package Rho.Main is
 
    procedure Init;
@@ -9,8 +7,6 @@ package Rho.Main is
    procedure Main_Loop;
 
    procedure Leave_Main_Loop;
-
-   function Current_Renderer return Rho.Rendering.Rho_Renderer;
 
    procedure Render_One_Frame;
 

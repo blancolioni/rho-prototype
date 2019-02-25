@@ -48,7 +48,7 @@ package body Rho.Rendering.GL_Renderer is
    is (Rho.Render_Target.Rho_Render_Target (Renderer.Top_Window));
 
    overriding procedure Render_Loop
-     (Renderer : in out Rho_GL_Renderer_Record);
+     (Renderer : not null access Rho_GL_Renderer_Record);
 
    overriding procedure EXIT_Render_Loop
      (Renderer : in out Rho_GL_Renderer_Record);
@@ -96,7 +96,18 @@ package body Rho.Rendering.GL_Renderer is
 --     function Load_Program
 --       (Vertex_Shader_Path   : String;
 --        Fragment_Shader_Path : String)
---        return Rho.Shader.Rho_Program;
+--        return Rho.Shaders.Rho_Program;
+
+   overriding function Load_Shader
+     (Renderer : in out Rho_GL_Renderer_Record;
+      Shader   : Rho.Shaders.Rho_Shader_Type;
+      Source   : String)
+      return Rho_Shader_Id;
+
+   overriding function Create_Program
+     (Renderer : in out Rho_GL_Renderer_Record;
+      Shaders  : Rho.Shaders.Shader_Array)
+      return Rho_Program_Id;
 
    -------------------------
    -- Create_GL_Renderer --
@@ -116,6 +127,49 @@ package body Rho.Rendering.GL_Renderer is
 
       return Rho_Renderer (Result);
    end Create_GL_Renderer;
+
+   --------------------
+   -- Create_Program --
+   --------------------
+
+   overriding function Create_Program
+     (Renderer : in out Rho_GL_Renderer_Record;
+      Shaders  : Rho.Shaders.Shader_Array)
+      return Rho_Program_Id
+   is
+      pragma Unreferenced (Renderer);
+      Id : constant Uint := GL.Create_Program;
+   begin
+      for Shader_Id of Shaders loop
+         GL.Attach_Shader (Id, Uint (Shader_Id));
+      end loop;
+      GL.Link_Program (Id);
+
+      declare
+         Result     : aliased Int := 0;
+         Log_Length : aliased Int;
+      begin
+         GL.Get_Program (Id, GL_LINK_STATUS, Result'Access);
+         if Result /= 0 then
+            GL.Get_Program (Id, GL_INFO_LOG_LENGTH, Log_Length'Access);
+            declare
+               Log : constant Interfaces.C.Strings.char_array_access :=
+                       new Interfaces.C.char_array
+                         (1 .. Interfaces.C.size_t (Log_Length));
+            begin
+               GL.Get_Shader_Info_Log (Id, Sizei (Log_Length), null,
+                                    Interfaces.C.Strings.To_Chars_Ptr
+                                      (Log));
+               Ada.Text_IO.Put_Line
+                   (Interfaces.C.To_Ada (Log.all));
+            end;
+            Ada.Text_IO.Put_Line ("Compilation failed");
+            return 0;
+         end if;
+      end;
+
+      return Rho_Program_Id (Id);
+   end Create_Program;
 
    --------------------
    -- Create_Surface --
@@ -265,28 +319,77 @@ package body Rho.Rendering.GL_Renderer is
       return Rho.Float_Buffer.Rho_Float_Buffer_Id (Buffer_Id);
    end Load_Buffer;
 
-   ------------------
-   -- Load_Program --
-   ------------------
+   -----------------
+   -- Load_Shader --
+   -----------------
 
---     function Load_Program
+   overriding function Load_Shader
+     (Renderer : in out Rho_GL_Renderer_Record;
+      Shader   : Rho.Shaders.Rho_Shader_Type;
+      Source   : String)
+      return Rho_Shader_Id
+   is
+      pragma Unreferenced (Renderer);
+
+      Id : constant Uint :=
+             GL.Create_Shader
+               (case Shader is
+                   when Rho.Shaders.Vertex_Shader   => GL_VERTEX_SHADER,
+                   when Rho.Shaders.Fragment_Shader => GL_FRAGMENT_SHADER);
+   begin
+
+      GL.Shader_Source
+        (Shader => Id,
+         Count  => 1,
+         Source => Source);
+
+      GL.Compile_Shader (Id);
+
+      declare
+         Result     : constant Int := GL.Get_Compile_Status (Id);
+         Log_Length : aliased Int;
+      begin
+
+         if Result /= 0 then
+            GL.Get_Shader (Id, GL_INFO_LOG_LENGTH, Log_Length'Access);
+
+            declare
+               Log : constant Interfaces.C.Strings.char_array_access :=
+                       new Interfaces.C.char_array
+                         (1 .. Interfaces.C.size_t (Log_Length));
+            begin
+               GL.Get_Shader_Info_Log (Id, Sizei (Log_Length), null,
+                                       Interfaces.C.Strings.To_Chars_Ptr
+                                         (Log));
+               Ada.Text_IO.Put_Line ("Load failed");
+               Ada.Text_IO.Put_Line
+                 (Interfaces.C.To_Ada (Log.all));
+               return 0;
+            end;
+         end if;
+      end;
+
+      return Rho_Shader_Id (Id);
+   end Load_Shader;
+
+   --     function Load_Program
 --       (Vertex_Shader_Path   : String;
 --        Fragment_Shader_Path : String)
---        return Rho.Shader.Rho_Program
+--        return Rho.Shaders.Rho_Program
 --     is
 --
---        Vertex_Shader   : constant Rho.Shader.Rho_Shader :=
---                            Rho.Shader.Load (Rho.Paths.Config_Path
+--        Vertex_Shader   : constant Rho.Shaders.Rho_Shader :=
+--                            Rho.Shaders.Load (Rho.Paths.Config_Path
 --                                            & "/shaders/"
 --                                            & Vertex_Shader_Path,
---                                            Rho.Shader.Vertex);
---        Fragment_Shader : constant Rho.Shader.Rho_Shader :=
---                            Rho.Shader.Load (Rho.Paths.Config_Path
+--                                            Rho.Shaders.Vertex);
+--        Fragment_Shader : constant Rho.Shaders.Rho_Shader :=
+--                            Rho.Shaders.Load (Rho.Paths.Config_Path
 --                                            & "/shaders/"
 --                                            & Fragment_Shader_Path,
---                                            Rho.Shader.Fragment);
---        Result          : constant Rho.Shader.Rho_Program :=
---                            Rho.Shader.Create;
+--                                            Rho.Shaders.Fragment);
+--        Result          : constant Rho.Shaders.Rho_Program :=
+--                            Rho.Shaders.Create;
 --     begin
 --        Result.Add (Vertex_Shader);
 --        Result.Add (Fragment_Shader);
@@ -510,7 +613,7 @@ package body Rho.Rendering.GL_Renderer is
    -----------------
 
    overriding procedure Render_Loop
-     (Renderer : in out Rho_GL_Renderer_Record)
+     (Renderer : not null access Rho_GL_Renderer_Record)
    is
       pragma Unreferenced (Renderer);
    begin

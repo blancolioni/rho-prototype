@@ -3,7 +3,6 @@ with Ada.Strings.Fixed;
 
 with Tropos.Reader;
 
-with Rho.Assets;
 with Rho.Color;
 
 with Rho.Materials.Technique;
@@ -13,17 +12,24 @@ with Rho.Texture;
 
 with Rho.Value;
 
+with Rho.Context;
+
 package body Rho.Materials.Loader is
 
    ----------
    -- Load --
    ----------
 
-   function Load (Path : String) return Rho.Materials.Material.Rho_Material is
+   function Load
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Path    : String)
+      return Rho.Materials.Material.Rho_Material
+   is
       use Rho.Materials.Material;
 
       Material : constant Rho_Material :=
-                   Rho.Materials.Material.Rho_New_With_Defaults;
+                   Rho.Materials.Material.Rho_New_With_Defaults
+                     (Context);
       Technique : constant Rho.Materials.Technique.Rho_Technique :=
                     Material.Technique (1);
       Pass      : constant Rho.Materials.Pass.Rho_Material_Pass :=
@@ -209,19 +215,19 @@ package body Rho.Materials.Loader is
                   if Exists (Possible_Path) then
                      Pass.Set_Texture
                        (Rho.Texture.Create_From_Png
-                          (Base_Name (Texture_Id), Possible_Path));
+                          (Material.Context,
+                           Base_Name (Texture_Id), Possible_Path));
                   elsif Exists (Possible_Indirect_Path) then
                      Pass.Set_Texture
                        (Rho.Texture.Create_From_Png
-                          (Base_Name (Texture_Id), Possible_Indirect_Path));
+                          (Material.Context,
+                           Base_Name (Texture_Id), Possible_Indirect_Path));
                   else
-                     Pass.Set_Texture
-                       (Rho.Assets.Texture (Texture_Id));
+                     Pass.Set_Texture (Context.Texture (Texture_Id));
                   end if;
                end;
             else
-               Pass.Set_Texture
-                 (Rho.Assets.Texture (Texture_Id));
+               Pass.Set_Texture (Context.Texture (Texture_Id));
             end if;
          end;
       end if;

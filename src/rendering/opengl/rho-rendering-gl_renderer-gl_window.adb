@@ -5,6 +5,8 @@ with Rho.Main;
 
 with Rho.Keyboard;
 
+with Rho.Shaders.Program;
+
 with GLUT;
 
 with GL;
@@ -75,7 +77,7 @@ package body Rho.Rendering.GL_Renderer.GL_Window is
    overriding procedure Bind_Vertex_Attribute
      (Target          : not null access Rho_GL_Window_Record;
       Buffer          : Rho.Float_Buffer.Rho_Float_Buffer;
-      Attribute       : Rho.Shader.Rho_Attribute_Value;
+      Attribute       : Rho.Shaders.Values.Rho_Attribute_Value;
       Start           : Positive;
       Component_Size  : Positive;
       Is_Array        : Boolean)
@@ -217,8 +219,7 @@ package body Rho.Rendering.GL_Renderer.GL_Window is
                            Line_Strip     => GL_LINE_STRIP,
                            Triangle_List  => GL_TRIANGLES,
                            Triangle_Strip => GL_TRIANGLE_STRIP,
-                           Triangle_Fan   => GL_TRIANGLE_FAN,
-                           Quad_List      => GL_QUADS);
+                           Triangle_Fan   => GL_TRIANGLE_FAN);
    begin
 
       if Buffer /= Target.Current_Buffer then
@@ -402,10 +403,13 @@ package body Rho.Rendering.GL_Renderer.GL_Window is
      (Window : not null access Rho_GL_Window_Record;
       Matrix : in Rho.Matrices.Matrix_Mode_Type)
    is
+      Program : constant Rho.Shaders.Program.Rho_Program :=
+                  Rho.Shaders.Program.Rho_Program
+                    (Window.Current_Shader);
    begin
       Window.Activate_Shader;
 
-      Window.Current_Shader.Uniform_Matrix_Value (Matrix).Set_Value
+      Program.Uniform_Matrix_Value (Matrix).Set_Value
         (Window.Current (Matrix));
       Window.Set_Matrix_Saved (Matrix);
 
@@ -691,7 +695,7 @@ package body Rho.Rendering.GL_Renderer.GL_Window is
 
    overriding procedure Uniform_Float_Array
      (Window   : not null access Rho_GL_Window_Record;
-      Uniform  : Rho.Shader.Rho_Uniform_Value;
+      Uniform  : Rho.Shaders.Values.Rho_Uniform_Value;
       Value    : Rho.Float_Arrays.Real_Vector)
    is
    begin

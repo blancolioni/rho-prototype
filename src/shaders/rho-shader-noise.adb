@@ -1,8 +1,8 @@
 with Ada.Numerics.Float_Random;
 
-with Rho.Shader.Load;
+with Rho.Shaders.Load;
 
-package body Rho.Shader.Noise is
+package body Rho.Shaders.Noise is
 
    ---------------------
    -- Create_Material --
@@ -76,9 +76,9 @@ package body Rho.Shader.Noise is
    is
       Shader : constant Rho_Noise_Shader := new Rho_Noise_Shader_Record;
       Vertex_Shader   : constant Rho_Vertex_Shader :=
-                          Rho.Shader.Load.Load ("Rho_noise.vert");
+                          Rho.Shaders.Load.Load ("Rho_noise.vert");
       Fragment_Shader : constant Rho_Fragment_Shader :=
-                          Rho.Shader.Load.Load ("Rho_noise.frag");
+                          Rho.Shaders.Load.Load ("Rho_noise.frag");
    begin
       Rho_Initialize (Shader.all);
       Shader.Add (Vertex_Shader);
@@ -155,4 +155,4 @@ package body Rho.Shader.Noise is
         Rho.Color.Scale (Palette, Map_Length, Rho.Color.Linear);
    end Set_Palette;
 
-end Rho.Shader.Noise;
+end Rho.Shaders.Noise;

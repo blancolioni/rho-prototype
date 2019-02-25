@@ -27,7 +27,7 @@ private package Rho.Materials.Templates is
       return String;
 
    generic
-      type Element_Type is tagged private;
+      type Element_Type is abstract tagged private;
       type Element_Access is access all Element_Type'Class;
    package Material_Template_Caches is
 

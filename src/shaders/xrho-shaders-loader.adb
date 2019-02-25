@@ -11,7 +11,7 @@ with GL_Types;
 
 with Rho.Paths;
 
-package body Rho.Shader.Load is
+package body Rho.Shaders.Loader is
 
    package String_Lists is
      new Ada.Containers.Indefinite_Doubly_Linked_Lists (String);
@@ -270,4 +270,4 @@ package body Rho.Shader.Load is
         (Path & Name & ".vert", Path & Name & ".frag");
    end Load_Standard_Shader;
 
-end Rho.Shader.Load;
+end Rho.Shaders.Loader;

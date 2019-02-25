@@ -2,7 +2,7 @@ with Rho.Color;
 with Rho.Materials.Material;
 with Rho.Texture;
 
-package Rho.Shader.Noise is
+package Rho.Shaders.Noise is
 
    type Rho_Noise_Shader_Record is
      new Rho_Shader_Record with private;
@@ -64,4 +64,4 @@ private
       return Rho.Materials.Material.Rho_Material
    is (Shader.Material);
 
-end Rho.Shader.Noise;
+end Rho.Shaders.Noise;

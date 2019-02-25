@@ -1,8 +1,5 @@
---  with Ada.Text_IO, Ada.Float_Text_IO;
-
 with Rho.Render_Operation;
-
-with Rho.Assets;
+with Rho.Context;
 
 package body Rho.Mesh is
 
@@ -30,11 +27,12 @@ package body Rho.Mesh is
          use type Rho.Materials.Material.Rho_Material;
          Entity   : constant Rho.Entity.Rho_Entity :=
                       Rho.Entity.Create
-                        (Mesh.Name & " - sub-entity"
+                        (Mesh.Context,
+                         Mesh.Name & " - sub-entity"
                          & Positive'Image (Sub_Mesh.Index));
          Material : constant Rho.Materials.Material.Rho_Material :=
                       (if Sub_Mesh.Material = null
-                       then Rho.Assets.Material ("default")
+                       then Mesh.Context.Material ("default")
                        else Sub_Mesh.Material);
       begin
          Entity.Set_Material (Material);
@@ -96,8 +94,7 @@ package body Rho.Mesh is
          declare
             Entity : Rho.Entity.Rho_Entity;
          begin
-            Rho.Entity.Rho_New (Entity);
-            Entity.Set_Name (Mesh.Name & " - entity");
+            Rho.Entity.Rho_New (Entity, Mesh.Context, Mesh.Name & " - entity");
             for Sub of Mesh.Sub_Meshes loop
                Entity.Add_Child (Create_Sub_Entity (Sub));
             end loop;

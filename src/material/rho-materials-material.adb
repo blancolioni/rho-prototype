@@ -111,7 +111,8 @@ package body Rho.Materials.Material is
    is
       Technique : Rho.Materials.Technique.Rho_Technique;
    begin
-      Rho.Materials.Technique.Rho_New (Technique, Material);
+      Rho.Materials.Technique.Rho_New
+        (Technique, Material);
       Material.Techniques.Append (Technique);
       return Technique;
    end New_Technique;
@@ -133,9 +134,13 @@ package body Rho.Materials.Material is
    -- Rho_New --
    ------------
 
-   procedure Rho_New (Material : in out Rho_Material) is
+   procedure Rho_New
+     (Material : in out Rho_Material;
+      Context  : not null access Rho.Context.Rho_Context_Record'Class)
+   is
    begin
       Material := new Rho_Material_Record;
+      Material.Context := Context;
    end Rho_New;
 
    --------------------------
@@ -143,14 +148,15 @@ package body Rho.Materials.Material is
    --------------------------
 
    function Rho_New_With_Defaults
-     return Rho_Material
+     (Context  : not null access Rho.Context.Rho_Context_Record'Class)
+      return Rho_Material
    is
       Material  : Rho_Material;
       Technique : Rho.Materials.Technique.Rho_Technique;
       Pass      : Rho.Materials.Pass.Rho_Material_Pass;
       pragma Unreferenced (Pass);
    begin
-      Rho_New (Material);
+      Rho_New (Material, Context);
       Technique := Material.New_Technique;
       Pass := Technique.New_Pass;
       return Material;
@@ -161,13 +167,14 @@ package body Rho.Materials.Material is
    -------------------------
 
    function Rho_New_With_Texture
-     (Name     : String;
+     (Context  : not null access Rho.Context.Rho_Context_Record'Class;
+      Name      : String;
       Texture  : Rho.Texture.Rho_Texture;
       Lighting : Boolean := True)
       return Rho_Material
    is
       Material : constant Rho_Material :=
-                   Rho_New_With_Defaults;
+                   Rho_New_With_Defaults (Context);
    begin
       Material.Set_Name (Name);
       Material.Technique (1).Pass (1).Set_Texture (Texture);

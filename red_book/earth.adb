@@ -1,11 +1,10 @@
-with Maas;                               use Maas;
+with Rho;                              use Rho;
 
 with Rho.Camera;
 with Rho.Entity;
 with Rho.Float_Arrays;
 with Rho.Frame_Event;
 with Rho.Light;
-with Rho.Main;
 with Rho.Materials.Material;
 with Rho.Matrices;
 with Rho.Node;
@@ -33,23 +32,29 @@ package body Earth is
    -- Create_Window --
    -------------------
 
-   procedure Create_Window is
+   procedure Create_Demo
+     (Handle : Rho.Handles.Rho_Handle)
+   is
       Scene : constant Rho.Scene.Rho_Scene := Rho.Scene.Create_Scene;
       Camera : constant Rho.Camera.Rho_Camera := Scene.Active_Camera;
       Sphere : constant Rho.Entity.Rho_Entity :=
-                 Rho.Shapes.Quadric_Sphere (Slices => 20,
-                                           Stacks => 10);
+                 Rho.Shapes.Quadric_Sphere
+                   (Context => Handle,
+                    Slices  => 20,
+                    Stacks  => 10);
       Node   : constant Rho.Node.Rho_Node := Scene.Create_Node ("earth");
       Light  : Rho.Light.Rho_Light;
       Window : constant Rho.Render_Window.Rho_Render_Window :=
-                   Rho.Main.Current_Renderer.Create_Top_Level_Window;
+                   Handle.Renderer.Create_Top_Level_Window;
       Texture  : constant Rho.Texture.Rho_Texture :=
-                   Rho.Texture.Create_From_Png ("earth",
-                                               Rho.Paths.Config_Path
-                                               & "/earth.png");
+                   Rho.Texture.Create_From_Png
+                     (Handle, "earth",
+                      Rho.Paths.Config_File ("earth.png"));
       Material : constant Rho.Materials.Material.Rho_Material :=
                    Rho.Materials.Material.Rho_New_With_Texture
-                     ("earth", Texture);
+                     (Context  => Handle,
+                      Name     => "earth",
+                      Texture  => Texture);
    begin
       Window.Set_Wireframe (False);
       Window.Set_Back_Face_Removal (True);
@@ -75,10 +80,10 @@ package body Earth is
                          Spin       => 0.0,
                          Camera     => Camera);
       begin
-         Rho.Main.Add_Frame_Listener (Listener);
+         Handle.Add_Frame_Listener (Listener);
       end;
 
-   end Create_Window;
+   end Create_Demo;
 
    -------------------
    -- Frame_Started --

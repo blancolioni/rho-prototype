@@ -5,8 +5,7 @@ package Rho.Render_Operation is
 
    type Operation_Type is
      (Point_List, Line_List, Line_Strip,
-      Triangle_List, Triangle_Strip, Triangle_Fan,
-      Quad_List);
+      Triangle_List, Triangle_Strip, Triangle_Fan);
 
    type Rho_Render_Operation_Interface is interface;
 

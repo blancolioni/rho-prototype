@@ -51,7 +51,7 @@ package body Rho.Entity is
    procedure Bind_Material
      (Entity : in out Rho_Entity_Record'Class)
    is
-      use type Rho.Shader.Rho_Attribute_Value;
+      use type Rho.Shaders.Values.Rho_Attribute_Value;
       use Rho.Float_Buffer;
       use Rho.Render_Operation;
 
@@ -82,15 +82,15 @@ package body Rho.Entity is
       begin
          Current_Draw.Operation := Operation;
 
-         Create (Current_Draw.Vertices);
+         Create (Current_Draw.Vertices, Entity.Context);
          if Entity.Use_Normals then
-            Create (Current_Draw.Normals);
+            Create (Current_Draw.Normals, Entity.Context);
          end if;
          if Entity.Use_Textures then
-            Create (Current_Draw.Textures);
+            Create (Current_Draw.Textures, Entity.Context);
          end if;
          if Entity.Use_Colors then
-            Create (Current_Draw.Colors);
+            Create (Current_Draw.Colors, Entity.Context);
          end if;
          Current_Draw.Count := 0;
       end Start_Operation;
@@ -144,7 +144,7 @@ package body Rho.Entity is
                Entity_Pass   : Render_Pass_Record;
 
 --                 procedure Bind_Attribute
---                   (Attribute : Rho.Shader.Rho_Attribute_Value;
+--                   (Attribute : Rho.Shaders.Rho_Attribute_Value;
 --                    Start     : Positive;
 --                    Size      : Positive);
 --
@@ -153,7 +153,7 @@ package body Rho.Entity is
 --                 --------------------
 --
 --                 procedure Bind_Attribute
---                   (Attribute : Rho.Shader.Rho_Attribute_Value;
+--                   (Attribute : Rho.Shaders.Rho_Attribute_Value;
 --                    Start     : Positive;
 --                    Size      : Positive)
 --                 is
@@ -171,7 +171,8 @@ package body Rho.Entity is
                   declare
                      Binding : Rho.Draw_Binding.Rho_Draw_Binding;
                   begin
-                     Rho.Draw_Binding.Rho_New (Binding, Draw_Op.Operation);
+                     Rho.Draw_Binding.Rho_New
+                       (Binding, Entity.Context, Draw_Op.Operation);
 
                      Binding.Append
                        (Attribute => Material_Pass.Position_Attribute,
@@ -312,11 +313,13 @@ package body Rho.Entity is
    ------------
 
    function Create
-     (Name : String := "")
+     (Context  : not null access Rho.Context.Rho_Context_Record'Class;
+      Name     : String := "")
       return Rho_Entity
    is
    begin
       return Entity : constant Rho_Entity := new Rho_Entity_Record do
+         Entity.Context := Context;
          if Name = "" then
             Entity.Set_Name (Rho.Names.New_Name ("entity"));
          else
@@ -383,6 +386,18 @@ package body Rho.Entity is
    end Execute_Render;
 
    ----------------
+   -- Get_Shader --
+   ----------------
+
+   overriding function Get_Shader
+     (Entity : in out Rho_Entity_Record)
+      return Rho.Shaders.Rho_Shader
+   is
+   begin
+      return Entity.Shader;
+   end Get_Shader;
+
+   ----------------
    -- Has_Shader --
    ----------------
 
@@ -390,7 +405,7 @@ package body Rho.Entity is
      (Entity : Rho_Entity_Record)
       return Boolean
    is
-      use type Rho.Shader.Rho_Shader;
+      use type Rho.Shaders.Rho_Shader;
    begin
       return Entity.Shader /= null;
    end Has_Shader;
@@ -410,9 +425,11 @@ package body Rho.Entity is
 
    procedure Initialize
      (Entity : in out Rho_Entity_Record;
-      Name   : String := "")
+      Context  : not null access Rho.Context.Rho_Context_Record'Class;
+      Name     : String := "")
    is
    begin
+      Entity.Context := Context;
       Entity.Set_Name (Name);
    end Initialize;
 
@@ -558,11 +575,13 @@ package body Rho.Entity is
    ------------
 
    procedure Rho_New
-     (Entity : in out Rho_Entity;
-      Name   : String := "")
+     (Entity   : in out Rho_Entity;
+      Context  : not null access Rho.Context.Rho_Context_Record'Class;
+      Name     : in String         := "")
    is
    begin
       Entity := new Rho_Entity_Record;
+      Entity.Context := Context;
       Entity.Set_Name (Name);
    end Rho_New;
 
@@ -597,7 +616,7 @@ package body Rho.Entity is
 
    overriding procedure Set_Shader
      (Entity  : in out Rho_Entity_Record;
-      Shader  : Rho.Shader.Rho_Shader)
+      Shader  : Rho.Shaders.Rho_Shader)
    is
    begin
       Entity.Shader := Shader;
@@ -614,20 +633,8 @@ package body Rho.Entity is
    begin
       Item.Material :=
         Rho.Materials.Material.Rho_New_With_Texture
-          (Texture.Name, Texture, Lighting => False);
+          (Item.Context, Texture.Name, Texture, Lighting => False);
    end Set_Texture;
-
-   ------------
-   -- Shader --
-   ------------
-
-   overriding function Shader
-     (Entity : in out Rho_Entity_Record)
-      return Rho.Shader.Rho_Shader
-   is
-   begin
-      return Entity.Shader;
-   end Shader;
 
    -------------
    -- Texture --

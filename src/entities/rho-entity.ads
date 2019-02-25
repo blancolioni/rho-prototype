@@ -12,8 +12,10 @@ with Rho.Object;
 with Rho.Renderable;
 with Rho.Render_Operation;
 with Rho.Render_Target;
-with Rho.Shader;
+with Rho.Shaders.Values;
 with Rho.Texture;
+
+limited with Rho.Context;
 
 package Rho.Entity is
 
@@ -23,19 +25,24 @@ package Rho.Entity is
      new Rho.Object.Rho_Object_Record
      and Rho.Renderable.Rho_Renderable
      and Rho.Render_Operation.Rho_Render_Operation_Interface
-     and Rho.Shader.Rho_Shader_Interface with private;
+     and Rho.Shaders.Rho_Has_Shader_Interface with private;
 
    type Rho_Entity is access all Rho_Entity_Record'Class;
 
-   procedure Rho_New (Entity : in out Rho_Entity;
-                     Name   : in String         := "");
+   procedure Rho_New
+     (Entity   : in out Rho_Entity;
+      Context  : not null access Rho.Context.Rho_Context_Record'Class;
+      Name     : in String         := "");
 
-   procedure Initialize (Entity : in out Rho_Entity_Record;
-                         Name   : String := "");
+   procedure Initialize
+     (Entity : in out Rho_Entity_Record;
+      Context  : not null access Rho.Context.Rho_Context_Record'Class;
+      Name     : String := "");
 
    function Create
-     (Name : String := "")
-     return Rho_Entity;
+     (Context  : not null access Rho.Context.Rho_Context_Record'Class;
+      Name     : String := "")
+      return Rho_Entity;
 
    overriding function Loaded
      (Entity : Rho_Entity_Record)
@@ -73,13 +80,13 @@ package Rho.Entity is
      (Entity : Rho_Entity_Record)
       return Boolean;
 
-   overriding function Shader
+   overriding function Get_Shader
      (Entity : in out Rho_Entity_Record)
-      return Rho.Shader.Rho_Shader;
+      return Rho.Shaders.Rho_Shader;
 
    overriding procedure Set_Shader
      (Entity  : in out Rho_Entity_Record;
-      Shader : Rho.Shader.Rho_Shader);
+      Shader : Rho.Shaders.Rho_Shader);
 
    overriding procedure Begin_Operation
      (Item      : in out Rho_Entity_Record;
@@ -176,7 +183,8 @@ private
 
    package Attribute_Binding_Vectors is
      new Ada.Containers.Vectors
-       (Positive, Rho.Shader.Rho_Attribute_Value, Rho.Shader."=");
+       (Positive, Rho.Shaders.Values.Rho_Attribute_Value,
+        Rho.Shaders.Values."=");
 
    package Binding_Operation_Vectors is
      new Ada.Containers.Vectors (Positive, Rho.Draw_Binding.Rho_Draw_Binding,
@@ -194,11 +202,12 @@ private
      new Rho.Object.Rho_Object_Record
      and Rho.Renderable.Rho_Renderable
      and Rho.Render_Operation.Rho_Render_Operation_Interface
-     and Rho.Shader.Rho_Shader_Interface with
+     and Rho.Shaders.Rho_Has_Shader_Interface with
       record
          Loaded              : Boolean := False;
+         Context             : access Rho.Context.Rho_Context_Record'Class;
          Material            : Rho.Materials.Material.Rho_Material;
-         Shader              : Rho.Shader.Rho_Shader;
+         Shader              : Rho.Shaders.Rho_Shader;
          Current_Position    : Render_Position;
          Operation           : Rho.Render_Operation.Operation_Type :=
                                  Rho.Render_Operation.Triangle_List;

@@ -5,7 +5,7 @@ with Ada.Text_IO;
 
 with Rho.Float_Arrays;
 
-with Rho.Assets;
+with Rho.Context;
 with Rho.Texture.Loader;
 
 with Partoe.DOM;
@@ -79,15 +79,19 @@ package body Rho.Mesh.Reader is
    -- Load --
    ----------
 
-   function Load (Path : String) return Rho_Mesh is
+   function Load
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Path    : String)
+      return Rho_Mesh
+   is
       Extension : constant String :=
                     Ada.Characters.Handling.To_Lower
                       (Ada.Directories.Extension (Path));
    begin
       if Extension = "dat" then
-         return Read_Dat_File (Path);
+         return Read_Dat_File (Context, Path);
       elsif Extension = "xml" or else Extension = "mesh" then
-         return Read_Mesh_XML_File (Path);
+         return Read_Mesh_XML_File (Context, Path);
       else
          return null;
       end if;
@@ -161,7 +165,8 @@ package body Rho.Mesh.Reader is
    -------------------
 
    function Read_Dat_File
-     (Path : String)
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Path    : String)
       return Rho_Mesh
    is
       use Ada.Text_IO;
@@ -173,6 +178,7 @@ package body Rho.Mesh.Reader is
       Texture      : Rho.Texture.Rho_Texture;
    begin
 
+      Result.Context := Context;
       Sub_Mesh.Index := 1;
       Result.Set_Name (Ada.Directories.Base_Name (Path));
 
@@ -282,10 +288,10 @@ package body Rho.Mesh.Reader is
                            if Texture = null then
                               Texture :=
                                 Rho.Texture.Loader.Load_Texture
-                                  (Rho.Assets.Image_Path (File_Name));
+                                  (Context, Context.Image_Path (File_Name));
                               Sub_Mesh.Material :=
                                 Rho.Materials.Material.Rho_New_With_Texture
-                                  (Result.Name, Texture);
+                                  (Context, Result.Name, Texture);
                            end if;
 
                            Index := First_Space + 1;
@@ -331,7 +337,8 @@ package body Rho.Mesh.Reader is
    ------------------------
 
    function Read_Mesh_XML_File
-     (Path : String)
+     (Context : not null access Rho.Context.Rho_Context_Record'Class;
+      Path    : String)
       return Rho_Mesh
    is
       use Partoe.DOM;
@@ -360,8 +367,7 @@ package body Rho.Mesh.Reader is
             Sub_Mesh.Index := Result.Sub_Meshes.Last_Index + 1;
 
             if Material_Attr /= null then
-               Sub_Mesh.Material :=
-                 Rho.Assets.Material (Material_Attr.Text);
+               Sub_Mesh.Material := Context.Material (Material_Attr.Text);
             end if;
 
             for Vertex_XML of Vertices_XML loop
