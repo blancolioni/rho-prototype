@@ -13,7 +13,11 @@ package Rho is
    function Clamp (X : Rho_Float) return Unit_Float
    is (Clamp (X, 0.0, 1.0));
 
-   type Uniform_Location_Type is new Integer;
+   type Rho_Shader_Location_Type is (Attribute_Value, Uniform_Value);
+   type Rho_Shader_Location_Id is new Integer;
+   type Rho_Attribute_Id is new Rho_Shader_Location_Id;
+   type Rho_Uniform_Id is new Rho_Shader_Location_Id;
+
    type Rho_Shader_Id is new Natural;
    type Rho_Program_Id is new Natural;
 

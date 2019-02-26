@@ -72,7 +72,7 @@ package body Rho.Shaders is
       Result :=
         new Rho_Attribute_Value_Record'
           (Rho.Object.Rho_Object_Record with
-             Attribute, Rho_Shader (Program), Uniform_Location_Type (Loc));
+             Attribute, Rho_Shader (Program), Rho_Uniform_id (Loc));
       Result.Set_Name (Name);
       return Result;
    end Attribute_Value;
@@ -91,7 +91,7 @@ package body Rho.Shaders is
                  new Rho_Attribute_Value_Record'
                    (Rho.Object.Rho_Object_Record with
                     Attribute, Rho_Shader (Program),
-                    Uniform_Location_Type (Location));
+                    Rho_Uniform_id (Location));
    begin
       Result.Set_Name (Name);
       return Result;
@@ -427,7 +427,7 @@ package body Rho.Shaders is
       Result :=
         new Rho_Uniform_Value_Record'
           (Rho.Object.Rho_Object_Record with
-             Uniform, Rho_Shader (Program), Uniform_Location_Type (Loc));
+             Uniform, Rho_Shader (Program), Rho_Uniform_id (Loc));
       Result.Set_Name (Name);
       return Result;
    end Uniform_Value;

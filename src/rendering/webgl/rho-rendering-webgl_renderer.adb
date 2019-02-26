@@ -1,5 +1,7 @@
 with Ada.Unchecked_Deallocation;
 
+with System.Storage_Elements;
+
 with Rho.Rendering.WebGL_Renderer.WebGL_Window;
 
 with Gnoga.Gui.Element.Common;
@@ -78,10 +80,88 @@ package body Rho.Rendering.WebGL_Renderer is
       Source   : String)
       return Rho_Shader_Id;
 
+   overriding procedure Use_Shader
+     (Renderer : in out Rho_WebGL_Renderer_Record;
+      Shader   : Rho_Program_Id);
+
    overriding function Create_Program
      (Renderer : in out Rho_WebGL_Renderer_Record;
       Shaders  : Rho.Shaders.Shader_Array)
       return Rho_Program_Id;
+
+   overriding procedure Bind_Vertex_Buffer
+     (Renderer       : in out Rho_WebGL_Renderer_Record;
+      Attribute      : Rho_Attribute_Id;
+      Buffer         : Rho.Float_Buffer.Rho_Float_Buffer;
+      Start          : Positive;
+      Component_Size : Positive);
+
+   overriding function Get_Attribute_Location
+     (Renderer : Rho_WebGL_Renderer_Record;
+      Program  : Rho_Program_Id;
+      Name     : String)
+      return Rho_Attribute_Id;
+
+   overriding function Get_Uniform_Location
+     (Renderer : Rho_WebGL_Renderer_Record;
+      Program  : Rho_Program_Id;
+      Name     : String)
+      return Rho_Uniform_Id;
+
+   overriding procedure Set_Uniform_Value
+     (Renderer   : in out Rho_WebGL_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Integer);
+
+   overriding procedure Set_Uniform_Value
+     (Renderer   : in out Rho_WebGL_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Rho_Float);
+
+   overriding procedure Set_Uniform_Value
+     (Renderer   : in out Rho_WebGL_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Rho.Float_Arrays.Real_Vector);
+
+   overriding procedure Set_Uniform_Value
+     (Renderer   : in out Rho_WebGL_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Rho.Float_Arrays.Real_Matrix);
+
+   overriding procedure Set_Uniform_Value
+     (Renderer   : in out Rho_WebGL_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Integer_Array);
+
+   overriding procedure Set_Uniform_Vector_Array
+     (Renderer     : in out Rho_WebGL_Renderer_Record;
+      Id           : Rho_Uniform_Id;
+      Element_Size : Positive;
+      Value        : Rho.Float_Arrays.Real_Vector);
+
+   ------------------------
+   -- Bind_Vertex_Buffer --
+   ------------------------
+
+   overriding procedure Bind_Vertex_Buffer
+     (Renderer       : in out Rho_WebGL_Renderer_Record;
+      Attribute      : Rho_Attribute_Id;
+      Buffer         : Rho.Float_Buffer.Rho_Float_Buffer;
+      Start          : Positive;
+      Component_Size : Positive)
+   is
+   begin
+      Renderer.Context.Bind_Buffer (GL_Array_Buffer, GLuint (Buffer.Id));
+      Renderer.Context.Vertex_Attrib_Pointer
+        (Index        => GLuint (Attribute),
+         Size         => GLuint (Component_Size),
+         Element_Type => GL_Float,
+         Normalized   => False,
+         Stride       => 0,
+         Pointer      => System.Storage_Elements.Storage_Offset (Start));
+      Renderer.Context.Enable_Vertex_Attrib_Array
+        (GLuint (Attribute));
+   end Bind_Vertex_Buffer;
 
    --------------------
    -- Create_Program --
@@ -165,6 +245,38 @@ package body Rho.Rendering.WebGL_Renderer is
    overriding procedure Exit_Render_Loop
      (Renderer : in out Rho_WebGL_Renderer_Record)
    is null;
+
+   ----------------------------
+   -- Get_Attribute_Location --
+   ----------------------------
+
+   overriding function Get_Attribute_Location
+     (Renderer : Rho_WebGL_Renderer_Record;
+      Program  : Rho_Program_Id;
+      Name     : String)
+      return Rho_Attribute_Id
+   is
+   begin
+      return Rho_Attribute_Id
+        (Renderer.Context.Get_Attrib_Location
+           (GLuint (Program), Name));
+   end Get_Attribute_Location;
+
+   --------------------------
+   -- Get_Uniform_Location --
+   --------------------------
+
+   overriding function Get_Uniform_Location
+     (Renderer : Rho_WebGL_Renderer_Record;
+      Program  : Rho_Program_Id;
+      Name     : String)
+      return Rho_Uniform_Id
+   is
+   begin
+      return Rho_Uniform_Id
+        (Renderer.Context.Get_Uniform_Location
+           (GLuint (Program), Name));
+   end Get_Uniform_Location;
 
    -----------------
    -- Load_Buffer --
@@ -527,6 +639,127 @@ package body Rho.Rendering.WebGL_Renderer is
          end select;
       end loop;
    end Render_Task_Type;
+
+   -----------------------
+   -- Set_Uniform_Value --
+   -----------------------
+
+   overriding procedure Set_Uniform_Value
+     (Renderer   : in out Rho_WebGL_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Integer)
+   is
+   begin
+      Renderer.Context.Uniform (GLint (Id), GLint (Value));
+   end Set_Uniform_Value;
+
+   -----------------------
+   -- Set_Uniform_Value --
+   -----------------------
+
+   overriding procedure Set_Uniform_Value
+     (Renderer   : in out Rho_WebGL_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Rho_Float)
+   is
+   begin
+      Renderer.Context.Uniform (GLint (Id), GLfloat (Value));
+   end Set_Uniform_Value;
+
+   -----------------------
+   -- Set_Uniform_Value --
+   -----------------------
+
+   overriding procedure Set_Uniform_Value
+     (Renderer   : in out Rho_WebGL_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Rho.Float_Arrays.Real_Vector)
+   is
+   begin
+      Renderer.Set_Uniform_Vector_Array (Id, 1, Value);
+   end Set_Uniform_Value;
+
+   -----------------------
+   -- Set_Uniform_Value --
+   -----------------------
+
+   overriding procedure Set_Uniform_Value
+     (Renderer   : in out Rho_WebGL_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Integer_Array)
+   is
+      Vector : Int_Array (Value'Range);
+   begin
+      for I in Vector'Range loop
+         Vector (I) := GLint (Value (I));
+      end loop;
+      Renderer.Context.Uniform (GLint (Id), Vector);
+   end Set_Uniform_Value;
+
+   -----------------------
+   -- Set_Uniform_Value --
+   -----------------------
+
+   overriding procedure Set_Uniform_Value
+     (Renderer   : in out Rho_WebGL_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Rho.Float_Arrays.Real_Matrix)
+   is
+      Matrix : Matrix_4;
+   begin
+      for I in Value'Range (1) loop
+         for J in Value'Range (2) loop
+            Matrix (I, J) := GLfloat (Value (I, J));
+         end loop;
+      end loop;
+
+      Renderer.Context.Uniform_Matrix (GLint (Id), Matrix);
+   end Set_Uniform_Value;
+
+   ------------------------------
+   -- Set_Uniform_Vector_Array --
+   ------------------------------
+
+   overriding procedure Set_Uniform_Vector_Array
+     (Renderer     : in out Rho_WebGL_Renderer_Record;
+      Id           : Rho_Uniform_Id;
+      Element_Size : Positive;
+      Value        : Rho.Float_Arrays.Real_Vector)
+   is
+      Vector : Float_Array (Value'Range);
+      Loc    : constant GLint := GLint (Id);
+   begin
+      for I in Vector'Range loop
+         Vector (I) := GLfloat (Value (I));
+      end loop;
+      case Element_Size is
+         when 1 =>
+            Renderer.Context.Uniform (Loc, Vector);
+         when 2 =>
+            Renderer.Context.Uniform_2v (Loc, Vector);
+         when 3 =>
+            Renderer.Context.Uniform_3v (Loc, Vector);
+         when 4 =>
+            Renderer.Context.Uniform_4v (Loc, Vector);
+         when others =>
+            raise Constraint_Error with
+              "Set_Uniform_Vector_Array: invalid element size:"
+              & Element_Size'Image;
+      end case;
+
+   end Set_Uniform_Vector_Array;
+
+   ----------------
+   -- Use_Shader --
+   ----------------
+
+   overriding procedure Use_Shader
+     (Renderer : in out Rho_WebGL_Renderer_Record;
+      Shader   : Rho_Program_Id)
+   is
+   begin
+      Renderer.Context.Use_Program (GLuint (Shader));
+   end Use_Shader;
 
    ------------------------
    -- WebGL_Event_Source --

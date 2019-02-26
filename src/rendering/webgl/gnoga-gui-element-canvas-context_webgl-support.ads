@@ -52,7 +52,7 @@ private package Gnoga.Gui.Element.Canvas.Context_WebGL.Support is
 
    procedure Uniform_Matrix
      (Context  : in out Context_WebGL_Type'Class;
-      Location : GLuint;
+      Location : GLint;
       Matrix   : Matrix_4);
 
    function Image (Value : GLfloat) return String;

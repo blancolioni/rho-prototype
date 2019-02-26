@@ -8,33 +8,6 @@ package body Rho.Render_Target is
       Is_Active : Boolean := False;
    end Render_Lock;
 
-   ---------------------
-   -- Activate_Shader --
-   ---------------------
-
-   procedure Activate_Shader
-     (Target : in out Rho_Render_Target_Record)
-   is
-      use type Rho.Shaders.Rho_Shader;
-   begin
-      if Target.Active_Shader
-        and then Target.Current_Shader /= Target.Shaders.First_Element
-      then
-         Target.Current_Shader.Deactivate;
-         Target.Active_Shader := False;
-      end if;
-
-      if not Target.Active_Shader
-        or else Target.Current_Shader
-          /= Target.Shaders.First_Element
-      then
-         Target.Clear_Matrix_Saved;
-         Target.Active_Shader := True;
-         Target.Current_Shader := Target.Shaders.First_Element;
-         Target.Current_Shader.Activate;
-      end if;
-   end Activate_Shader;
-
    ------------------
    -- Active_Light --
    ------------------
@@ -110,33 +83,6 @@ package body Rho.Render_Target is
       return Target.Clear_Color;
    end Clear_Color;
 
-   ------------------------
-   -- Clear_Matrix_Saved --
-   ------------------------
-
-   procedure Clear_Matrix_Saved
-     (Target : in out Rho_Render_Target_Record'Class)
-   is
-   begin
-      Target.Matrix_Saved := (others => False);
-   end Clear_Matrix_Saved;
-
-   --------------------
-   -- Current_Shader --
-   --------------------
-
-   function Current_Shader
-     (Target : Rho_Render_Target_Record)
-      return Rho.Shaders.Rho_Shader
-   is
-   begin
-      if Target.Shaders.Is_Empty then
-         return null;
-      else
-         return Target.Shaders.First_Element;
-      end if;
-   end Current_Shader;
-
    ----------------
    -- Depth_Test --
    ----------------
@@ -172,28 +118,6 @@ package body Rho.Render_Target is
    begin
       Target.Point_Size := Enabled;
    end Enable_Point_Size;
-
-   -------------
-   -- Frustum --
-   -------------
-
-   procedure Frustum
-     (Target      : in out Rho_Render_Target_Record;
-      Left, Right : Rho_Float;
-      Bottom, Top : Rho_Float;
-      Near, Far   : Rho_Float)
-   is
-      A : constant Rho_Float := (Right + Left) / (Right - Left);
-      B : constant Rho_Float := (Top + Bottom) / (Top - Bottom);
-      C : constant Rho_Float := (Far + Near) / (Far - Near);
-      D : constant Rho_Float := 2.0 * Far * Near / (Far - Near);
-   begin
-      Rho_Render_Target_Record'Class (Target).Multiply
-        (((2.0 * Near / (Right - Left), 0.0, A, 0.0),
-         (0.0, 2.0 * Near / (Top - Bottom), B, 0.0),
-         (0.0, 0.0, C, D),
-         (0.0, 0.0, -1.0, 0.0)));
-   end Frustum;
 
    -------------------
    -- Full_Viewport --
@@ -284,19 +208,6 @@ package body Rho.Render_Target is
       Render_Lock.Begin_Operation;
    end Lock;
 
-   ------------------
-   -- Matrix_Saved --
-   ------------------
-
-   function Matrix_Saved
-     (Target : Rho_Render_Target_Record'Class;
-      Matrix : Rho.Matrices.Matrix_Mode_Type)
-      return Boolean
-   is
-   begin
-      return Target.Matrix_Saved (Matrix);
-   end Matrix_Saved;
-
    ---------------
    -- On_Resize --
    ---------------
@@ -308,77 +219,6 @@ package body Rho.Render_Target is
    begin
       Target.Resize_Handler := Handler;
    end On_Resize;
-
-   -----------
-   -- Ortho --
-   -----------
-
-   procedure Ortho
-     (Target      : in out Rho_Render_Target_Record;
-      Left, Right : Rho_Float;
-      Bottom, Top : Rho_Float;
-      Near, Far   : Rho_Float)
-   is
-      TX : constant Rho_Float :=
-             (Right + Left) / (Right - Left);
-      TY : constant Rho_Float :=
-             (Top + Bottom) / (Top - Bottom);
-      TZ : constant Rho_Float :=
-             (Far + Near) / (Far - Near);
-   begin
-      Rho_Render_Target_Record'Class (Target).Multiply
-        (((2.0 / (Right - Left), 0.0, 0.0, -TX),
-         (0.0, 2.0 / (Top - Bottom), 0.0, -TY),
-         (0.0, 0.0, -2.0 / (Far - Near), -TZ),
-         (0.0, 0.0, 0.0, 1.0)));
-   end Ortho;
-
-   ----------------
-   -- Pop_Shader --
-   ----------------
-
-   procedure Pop_Shader
-     (Target : in out Rho_Render_Target_Record)
-   is
---        use type Rho.Shaders.Rho_Shader;
---        Top : constant Rho.Shaders.Rho_Shader :=
---                Target.Shaders.First_Element;
-   begin
-      Target.Shaders.Delete_First;
---        if Target.Shaders.Is_Empty
---          or else Top /= Target.Shaders.First_Element
---        then
---           Target.Clear_Matrix_Saved;
---           if Target.Active_Shader then
---              Top.Deactivate;
---              Target.Active_Shader := False;
---           end if;
---        end if;
-   end Pop_Shader;
-
-   -----------------
-   -- Push_Shader --
-   -----------------
-
-   procedure Push_Shader
-     (Target : in out Rho_Render_Target_Record;
-      Shader : Rho.Shaders.Rho_Shader)
-   is
---        use type Rho.Shaders.Rho_Shader;
---        Changed : constant Boolean :=
---                    Target.Shaders.Is_Empty;
-                  --  or else Shader /= Target.Shaders.First_Element;
-   begin
---        if Changed then
---           Target.Clear_Matrix_Saved;
---        end if;
-
---        if Changed and then Target.Active_Shader then
---           Target.Shaders.First_Element.Deactivate;
---           Target.Active_Shader := False;
---        end if;
-      Target.Shaders.Insert (Target.Shaders.First, Shader);
-   end Push_Shader;
 
    -----------------
    -- Render_Lock --
@@ -487,18 +327,6 @@ package body Rho.Render_Target is
          Position, Spot_Direction, Spot_Exponent, Spot_Cutoff,
          Attenuation, Ambient_Coefficient);
    end Set_Light;
-
-   ----------------------
-   -- Set_Matrix_Saved --
-   ----------------------
-
-   procedure Set_Matrix_Saved
-     (Target : in out Rho_Render_Target_Record'Class;
-      Matrix : Rho.Matrices.Matrix_Mode_Type)
-   is
-   begin
-      Target.Matrix_Saved (Matrix) := True;
-   end Set_Matrix_Saved;
 
    ------------------
    -- Set_Viewport --

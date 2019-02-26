@@ -5,6 +5,8 @@ with GL;
 with Rho.Names;
 
 with Rho.Context;
+with Rho.Rendering;
+
 with Rho.Float_Arrays;
 with Rho.Logging;
 
@@ -35,12 +37,13 @@ package body Rho.Node is
       Target : not null access
         Rho.Render_Target.Rho_Render_Target_Record'Class)
    is
+      pragma Unreferenced (Target);
    begin
       if Node.Translated
         or else Node.Rotated
         or else Node.Scaled
       then
-         Target.Pop_Matrix;
+         Node.Context.Renderer.Pop_Matrix;
       end if;
    end After_Render;
 
@@ -66,6 +69,7 @@ package body Rho.Node is
       Target : not null access
         Rho.Render_Target.Rho_Render_Target_Record'Class)
    is
+      pragma Unreferenced (Target);
    begin
 
       Node.Clear_Child_Cache := Node.Clear_Child_Cache
@@ -75,19 +79,19 @@ package body Rho.Node is
         or else Node.Rotated
         or else Node.Scaled
       then
-         Target.Push_Matrix;
+         Node.Context.Renderer.Push_Matrix;
          if not Node.View_Matrix_Cached then
             if Node.Translated then
-               Target.Translate (Node.Position (1 .. 3));
+               Node.Context.Renderer.Translate (Node.Position (1 .. 3));
             end if;
             if Node.Rotated and then not Node.Billboard then
-               Target.Rotate (Node.Orientation);
+               Node.Context.Renderer.Rotate (Node.Orientation);
             end if;
-            Node.Model_View_Matrix := Target.Current;
+            Node.Model_View_Matrix := Node.Context.Renderer.Current;
             Node.View_Matrix_Cached := True;
             Node.Clear_Child_Cache := True;
          else
-            Target.Set_Current (Node.Model_View_Matrix);
+            Node.Context.Renderer.Set_Current (Node.Model_View_Matrix);
             Node.Clear_Child_Cache := False;
          end if;
       else
@@ -289,6 +293,8 @@ package body Rho.Node is
    is
       use type Rho.Entity.Rho_Entity;
       Current_Depth_Test  : constant Boolean := Target.Depth_Test;
+      Renderer : constant Rho.Rendering.Rho_Renderer :=
+                   Node.Context.Renderer;
    begin
 
       if GL.Debug_Enabled then
@@ -309,8 +315,8 @@ package body Rho.Node is
          end if;
 
          if Node.Scaled then
-            Target.Push_Matrix;
-            Target.Scale (Node.Scale);
+            Renderer.Push_Matrix;
+            Renderer.Scale (Node.Scale);
          end if;
 
          if Node.Billboard then
@@ -324,8 +330,8 @@ package body Rho.Node is
              --              pragma Unreferenced (MVP);
                use Rho.Matrices;
                Screen_Position : Vector_4 :=
-                                   (Target.Current (Projection)
-                                    * Target.Current (Model_View))
+                                   (Renderer.Current (Projection)
+                                    * Renderer.Current (Model_View))
                                    * Node.Position;
             begin
 
@@ -345,9 +351,9 @@ package body Rho.Node is
                   return;
                end if;
 
-               Target.Matrix_Mode (Projection);
-               Target.Push_Matrix;
-               Target.Load_Identity;
+               Renderer.Matrix_Mode (Projection);
+               Renderer.Push_Matrix;
+               Renderer.Load_Identity;
                --                    Target.Ortho
                --                      (Left   => -1.0,
                --                       Right  => 1.0,
@@ -357,15 +363,15 @@ package body Rho.Node is
                --                       Far    => 1.0);
                Target.Set_Depth_Test (False);
 
-               Target.Matrix_Mode (Model_View);
-               Target.Push_Matrix;
-               Target.Load_Identity;
+               Renderer.Matrix_Mode (Model_View);
+               Renderer.Push_Matrix;
+               Renderer.Load_Identity;
 
-               Target.Translate
+               Renderer.Translate
                  (Screen_Position (1), Screen_Position (2), 0.0);
 
                if Node.Pixel_Scaled then
-                  Target.Translate
+                  Renderer.Translate
                     (Node.Pixel_Offset_X
                      / Target.Viewport.Width,
                      Node.Pixel_Offset_Y
@@ -392,7 +398,7 @@ package body Rho.Node is
                                    + Node.Pixel_Offset_Y
                                  + Node.Entity.Y_Min * Y_Scale;
                   begin
-                     Target.Scale (X_Scale, Y_Scale, 1.0);
+                     Renderer.Scale (X_Scale, Y_Scale, 1.0);
                      Node.Screen_Rectangle :=
                        (X - Node.Pixel_Scale_Width,
                         Y - Node.Pixel_Scale_Height,
@@ -417,8 +423,8 @@ package body Rho.Node is
                         Rho.Logging.Put (", ");
                         Rho.Logging.Put (Rho_Float (Y), 0);
                         Rho.Logging.Put (") => ");
-                        Rho.Logging.Put (Target.Current (Projection)
-                                        * Target.Current (Model_View)
+                        Rho.Logging.Put (Renderer.Current (Projection)
+                                        * Renderer.Current (Model_View)
                                         * (Rho_Float (X),
                                           Rho_Float (Y),
                                           0.0, 1.0));
@@ -437,7 +443,7 @@ package body Rho.Node is
          end if;
 
          if Node.Scaled then
-            Target.Pop_Matrix;
+            Renderer.Pop_Matrix;
          end if;
 
       end if;
@@ -462,10 +468,10 @@ package body Rho.Node is
       Node.Clear_Child_Cache := False;
 
       if Node.Billboard then
-         Target.Matrix_Mode (Rho.Matrices.Projection);
-         Target.Pop_Matrix;
-         Target.Matrix_Mode (Rho.Matrices.Model_View);
-         Target.Pop_Matrix;
+         Renderer.Matrix_Mode (Rho.Matrices.Projection);
+         Renderer.Pop_Matrix;
+         Renderer.Matrix_Mode (Rho.Matrices.Model_View);
+         Renderer.Pop_Matrix;
          Target.Set_Depth_Test (Current_Depth_Test);
       end if;
 

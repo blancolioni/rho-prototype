@@ -109,9 +109,70 @@ package body Rho.Rendering.GL_Renderer is
       Shaders  : Rho.Shaders.Shader_Array)
       return Rho_Program_Id;
 
-   -------------------------
+   overriding procedure Bind_Vertex_Buffer
+     (Renderer       : in out Rho_GL_Renderer_Record;
+      Attribute      : Rho_Attribute_Id;
+      Buffer         : Rho.Float_Buffer.Rho_Float_Buffer;
+      Start          : Positive;
+      Component_Size : Positive);
+
+   overriding procedure Set_Uniform_Value
+     (Renderer   : in out Rho_GL_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Integer);
+
+   overriding procedure Set_Uniform_Value
+     (Renderer   : in out Rho_GL_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Rho_Float);
+
+   overriding procedure Set_Uniform_Value
+     (Renderer   : in out Rho_GL_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Rho.Float_Arrays.Real_Vector);
+
+   overriding procedure Set_Uniform_Value
+     (Renderer   : in out Rho_GL_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Rho.Float_Arrays.Real_Matrix);
+
+   overriding procedure Set_Uniform_Value
+     (Renderer   : in out Rho_GL_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Integer_Array);
+
+   overriding procedure Set_Uniform_Vector_Array
+     (Renderer     : in out Rho_GL_Renderer_Record;
+      Id           : Rho_Uniform_Id;
+      Element_Size : Positive;
+      Value        : Rho.Float_Arrays.Real_Vector);
+
+   ------------------------
+   -- Bind_Vertex_Buffer --
+   ------------------------
+
+   overriding procedure Bind_Vertex_Buffer
+     (Renderer       : in out Rho_GL_Renderer_Record;
+      Attribute      : Rho_Attribute_Id;
+      Buffer         : Rho.Float_Buffer.Rho_Float_Buffer;
+      Start          : Positive;
+      Component_Size : Positive)
+   is
+      pragma Unreferenced (Renderer);
+   begin
+      GL.Vertex_Attribute_Pointer
+        (Index        => Uint (Attribute),
+         Size         => Int (Component_Size),
+         Element_Type => GL_FLOAT,
+         Normalized   => GL_FALSE,
+         Stride       => 0,
+         Pointer      => Buffer.To_Offset (Start));
+      GL.Enable_Vertex_Attribute_Array (Uint (Attribute));
+   end Bind_Vertex_Buffer;
+
+   ------------------------
    -- Create_GL_Renderer --
-   -------------------------
+   ------------------------
 
    function Create_GL_Renderer
      return Rho_Renderer

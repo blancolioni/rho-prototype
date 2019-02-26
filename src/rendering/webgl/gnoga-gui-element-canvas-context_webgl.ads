@@ -21,6 +21,7 @@ package Gnoga.Gui.Element.Canvas.Context_WebGL is
    type GLvoidptr is new System.Address;
 
    type Float_Array is array (Positive range <>) of GLfloat;
+   type Int_Array is array (Positive range <>) of GLint;
    type Uint16_Array is array (Positive range <>) of GLuint16;
    type Uint8_Array is array (Positive range <>) of GLuint8;
    subtype Element_Array is Uint16_Array;
@@ -698,7 +699,7 @@ package Gnoga.Gui.Element.Canvas.Context_WebGL is
 
    procedure Uniform_Matrix
      (Context  : in out Context_WebGL_Type'Class;
-      Location : GLuint;
+      Location : GLint;
       Matrix   : Matrix_4);
 
    procedure Active_Texture
@@ -970,7 +971,7 @@ package Gnoga.Gui.Element.Canvas.Context_WebGL is
      (Context : in out Context_WebGL_Type'Class;
       Flag : Boolean);
 
-   procedure Depth_Range
+   procedure Depth_Rangef
      (Context : in out Context_WebGL_Type'Class;
       N : GLfloat;
       F : GLfloat);
@@ -1387,7 +1388,7 @@ package Gnoga.Gui.Element.Canvas.Context_WebGL is
       Item_Type : Pixel_Type;
       Pixels : Uint8_Array);
 
-   procedure Tex_Parameter
+   procedure Tex_Parameterf
      (Context : in out Context_WebGL_Type'Class;
       Target : Texture_Target;
       Pname : Texture_Parameter_Name;
@@ -1447,39 +1448,36 @@ package Gnoga.Gui.Element.Canvas.Context_WebGL is
       Item_Type : Pixel_Type;
       Pixels : Uint8_Array);
 
-   procedure Uniform_1
+   procedure Uniform
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
       V0 : GLfloat);
 
-   procedure Uniform_1fv
+   procedure Uniform
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
-      Count : GLsizei;
-      Value : GLfloat);
+      Value : Float_Array);
 
-   procedure Uniform_1i
+   procedure Uniform
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
       V0 : GLint);
 
-   procedure Uniform_1iv
+   procedure Uniform
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
-      Count : GLsizei;
-      Value : GLint);
+      Value : Int_Array);
 
-   procedure Uniform_2
+   procedure Uniform
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
-      V0 : GLfloat;
-      V1 : GLfloat);
+      Value_1 : GLfloat;
+      Value_2 : GLfloat);
 
-   procedure Uniform_2fv
+   procedure Uniform_2v
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
-      Count : GLsizei;
-      Value : GLfloat);
+      Value : Float_Array);
 
    procedure Uniform_2i
      (Context : in out Context_WebGL_Type'Class;
@@ -1493,18 +1491,17 @@ package Gnoga.Gui.Element.Canvas.Context_WebGL is
       Count : GLsizei;
       Value : GLint);
 
-   procedure Uniform_3
+   procedure Uniform_3f
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
       V0 : GLfloat;
       V1 : GLfloat;
       V2 : GLfloat);
 
-   procedure Uniform_3fv
+   procedure Uniform_3v
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
-      Count : GLsizei;
-      Value : GLfloat);
+      Value : Float_Array);
 
    procedure Uniform_3i
      (Context : in out Context_WebGL_Type'Class;
@@ -1519,7 +1516,7 @@ package Gnoga.Gui.Element.Canvas.Context_WebGL is
       Count : GLsizei;
       Value : GLint);
 
-   procedure Uniform_4
+   procedure Uniform_4f
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
       V0 : GLfloat;
@@ -1527,11 +1524,10 @@ package Gnoga.Gui.Element.Canvas.Context_WebGL is
       V2 : GLfloat;
       V3 : GLfloat);
 
-   procedure Uniform_4fv
+   procedure Uniform_4v
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
-      Count : GLsizei;
-      Value : GLfloat);
+      Value : Float_Array);
 
    procedure Uniform_4i
      (Context : in out Context_WebGL_Type'Class;
@@ -1576,7 +1572,7 @@ package Gnoga.Gui.Element.Canvas.Context_WebGL is
      (Context : in out Context_WebGL_Type'Class;
       Program : GLuint);
 
-   procedure Vertex_Attrib_1
+   procedure Vertex_Attrib_1f
      (Context : in out Context_WebGL_Type'Class;
       Index : GLuint;
       X : GLfloat);
@@ -1586,7 +1582,7 @@ package Gnoga.Gui.Element.Canvas.Context_WebGL is
       Index : GLuint;
       V : GLfloat);
 
-   procedure Vertex_Attrib_2
+   procedure Vertex_Attrib_2f
      (Context : in out Context_WebGL_Type'Class;
       Index : GLuint;
       X : GLfloat;
@@ -1597,7 +1593,7 @@ package Gnoga.Gui.Element.Canvas.Context_WebGL is
       Index : GLuint;
       V : GLfloat);
 
-   procedure Vertex_Attrib_3
+   procedure Vertex_Attrib_3f
      (Context : in out Context_WebGL_Type'Class;
       Index : GLuint;
       X : GLfloat;
@@ -1609,7 +1605,7 @@ package Gnoga.Gui.Element.Canvas.Context_WebGL is
       Index : GLuint;
       V : GLfloat);
 
-   procedure Vertex_Attrib_4
+   procedure Vertex_Attrib_4f
      (Context : in out Context_WebGL_Type'Class;
       Index : GLuint;
       X : GLfloat;

@@ -41,14 +41,14 @@ package body Rho.GL_API.Generator is
       Feature : Require_Record renames Document.Feature_Map (Feature_Key);
 
       procedure Put_Command
-        (Command                : Command_Record;
-         Data_Array_Type_Name   : String;
-         Data_Array_Target_Name : String);
+        (Command                   : Command_Record;
+         Generic_Array_Type_Name   : String;
+         Generic_Array_Target_Name : String);
 
       procedure Put_Parameters
-        (Parameters             : Parameter_Lists.List;
-         Data_Array_Target_Name : String;
-         Mask_Parameter_Name    : String);
+        (Parameters                : Parameter_Lists.List;
+         Generic_Array_Target_Name : String;
+         Mask_Parameter_Name       : String);
 
       -----------------
       -- Put_Command --
@@ -56,8 +56,8 @@ package body Rho.GL_API.Generator is
 
       procedure Put_Command
         (Command                : Command_Record;
-         Data_Array_Type_Name   : String;
-         Data_Array_Target_Name : String)
+         Generic_Array_Type_Name   : String;
+         Generic_Array_Target_Name : String)
       is
          use type Ada.Strings.Unbounded.Unbounded_String;
          Name : constant String := -Command.Name;
@@ -74,8 +74,9 @@ package body Rho.GL_API.Generator is
                           else -Command.Return_Group);
          Is_Function : constant Boolean := Return_Type /= "";
          First_Parameter : Boolean := True;
-         Have_Data_Array  : constant Boolean := Command.Have_Data_Array;
-         Data_Array_Param : Parameter_Record;
+         Have_Argument_Array : constant Boolean :=
+                                 Command.Have_Argument_Array;
+         Argument_Array_Param : Parameter_Record;
          Have_Group_Mask  : Boolean := False;
          Group_Parameter  : Parameter_Record;
          Group_Mask       : Group_Record;
@@ -127,8 +128,8 @@ package body Rho.GL_API.Generator is
                begin
 
                   if not Parameter.Implied then
-                     if Parameter.Data_Array then
-                        Data_Array_Param := Parameter;
+                     if Parameter.Argument_Array then
+                        Argument_Array_Param := Parameter;
                      end if;
 
                      if First_Parameter then
@@ -145,8 +146,10 @@ package body Rho.GL_API.Generator is
                      Put (Parameter_Name (Parameter_Name'First + 1
                           .. Parameter_Name'Last));
                      Put (" : ");
-                     if Parameter.Data_Array then
-                        Put (Data_Array_Type_Name);
+                     if Parameter.Argument_Array
+                       and then Generic_Array_Type_Name /= ""
+                     then
+                        Put (Generic_Array_Type_Name);
                      elsif Parameter.Byte_Offset then
                         Put ("System.Storage_Elements.Storage_Offset");
                      elsif Parameter.Writeable_Array then
@@ -196,7 +199,7 @@ package body Rho.GL_API.Generator is
                   Put_Line ("   is");
                end if;
 
-               if Have_Data_Array then
+               if Have_Argument_Array then
                   Put_Line
                     ("      use Ada.Strings.Unbounded;");
                end if;
@@ -206,7 +209,7 @@ package body Rho.GL_API.Generator is
                     ("      Error : Natural;");
                end if;
 
-               if Have_Data_Array then
+               if Have_Argument_Array then
                   Put_Line
                     ("      Data_Image : Unbounded_String;");
                end if;
@@ -221,10 +224,10 @@ package body Rho.GL_API.Generator is
 
                Put_Line ("   begin");
 
-               if Have_Data_Array then
+               if Have_Argument_Array then
                   Put_Line
                     ("      for X of "
-                     & (-Data_Array_Param.Parameter_Name)
+                     & (-Argument_Array_Param.Parameter_Name)
                      & " loop");
                   Put_Line
                     ("         if Data_Image /= """" then");
@@ -278,7 +281,7 @@ package body Rho.GL_API.Generator is
                             & "(""");
                   Put_Parameters
                     (Command.Parameters,
-                     Data_Array_Target_Name,
+                     Generic_Array_Target_Name,
                      (if Have_Group_Mask
                       then -Group_Parameter.Parameter_Name
                       else ""));
@@ -308,7 +311,7 @@ package body Rho.GL_API.Generator is
                   & "(""");
                Put_Parameters
                  (Command.Parameters,
-                  Data_Array_Target_Name,
+                  Generic_Array_Target_Name,
                   (if Have_Group_Mask
                    then -Group_Parameter.Parameter_Name
                    else ""));
@@ -353,12 +356,30 @@ package body Rho.GL_API.Generator is
       --------------------
 
       procedure Put_Parameters
-        (Parameters             : Parameter_Lists.List;
-         Data_Array_Target_Name : String;
-         Mask_Parameter_Name    : String)
+        (Parameters                : Parameter_Lists.List;
+         Generic_Array_Target_Name : String;
+         Mask_Parameter_Name       : String)
       is
          use Ada.Strings.Unbounded;
          First_Parameter : Boolean := True;
+
+         function Array_Type_Name
+           (Parameter : Parameter_Record)
+            return String
+         is (if not Parameter.Argument_Array
+             then -Parameter.Type_Name
+             elsif Generic_Array_Target_Name /= ""
+             then Generic_Array_Target_Name
+             elsif Parameter.Type_Name = "Float_Array"
+             then "Float32Array"
+             elsif Parameter.Type_Name = "Int_Array"
+             then "Int32Array"
+             elsif Parameter.Type_Name = "Uint16_Array"
+             then "Int16Array"
+             elsif Parameter.Type_Name = "Uint8_Array"
+             then "Uint8Array"
+             else -Parameter.Type_Name);
+
       begin
          for Parameter of Parameters loop
             declare
@@ -392,9 +413,9 @@ package body Rho.GL_API.Generator is
                end if;
                Put ("         & ");
 
-               if Parameter.Data_Array then
+               if Parameter.Argument_Array then
                   Put
-                    ("""new " & Data_Array_Target_Name & "(["" & "
+                    ("""new " & Array_Type_Name (Parameter) & "(["" & "
                      & "To_String (Data_Image) & ""])""");
                elsif Parameter.Parameter_Name = Mask_Parameter_Name then
                   Put (To_Ada_Parameter_Name
@@ -498,7 +519,7 @@ package body Rho.GL_API.Generator is
 
             Put_Line ("   procedure Uniform_Matrix");
             Put_Line ("     (Context  : in out Context_WebGL_Type'Class;");
-            Put_Line ("      Location : GLuint;");
+            Put_Line ("      Location : GLint;");
             Put_Line ("      Matrix   : Matrix_4);");
             New_Line;
 
@@ -558,7 +579,7 @@ package body Rho.GL_API.Generator is
 
          Put_Line ("   procedure Uniform_Matrix");
          Put_Line ("     (Context  : in out Context_WebGL_Type'Class;");
-         Put_Line ("      Location : GLuint;");
+         Put_Line ("      Location : GLint;");
          Put_Line ("      Matrix   : Matrix_4)");
          Put_Line ("   renames Support.Uniform_Matrix;");
          New_Line;
@@ -630,7 +651,7 @@ package body Rho.GL_API.Generator is
 
       for Command of Document.Command_List loop
 
-         if Command.Have_Data_Array then
+         if Command.Have_Generic_Array then
             Put_Command (Command, "Float_Array", "Float32Array");
             Put_Command (Command, "Uint16_Array", "Uint16Array");
             Put_Command (Command, "Uint8_Array", "Uint8Array");
@@ -731,6 +752,8 @@ package body Rho.GL_API.Generator is
 
       Put_Line ("   type Float_Array is "
                 & "array (Positive range <>) of GLfloat;");
+      Put_Line ("   type Int_Array is "
+                & "array (Positive range <>) of GLint;");
       Put_Line ("   type Uint16_Array is "
                 & "array (Positive range <>) of GLuint16;");
       Put_Line ("   type Uint8_Array is "
@@ -913,9 +936,6 @@ package body Rho.GL_API.Generator is
             Upper := Is_Upper (Ch);
          end if;
       end loop;
-      if Result (Length) = 'f' then
-         Length := Length - 1;
-      end if;
       return Result (1 .. Length);
    end To_Ada_Command_Name;
 

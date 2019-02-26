@@ -123,6 +123,18 @@ package Rho.Matrices is
      (State : in out Rho_Matrix_Operation_Record;
       X, Y, Z  : Rho_Float);
 
+   procedure Frustum
+     (Target      : in out Rho_Matrix_Operation_Record;
+      Left, Right : Rho_Float;
+      Bottom, Top : Rho_Float;
+      Near, Far   : Rho_Float);
+
+   procedure Ortho
+     (Target      : in out Rho_Matrix_Operation_Record;
+      Left, Right : Rho_Float;
+      Bottom, Top : Rho_Float;
+      Near, Far   : Rho_Float);
+
 private
 
    package List_Of_Matrices is

@@ -1,3 +1,6 @@
+with Rho.Context;
+with Rho.Rendering;
+
 package body Rho.Camera is
 
    --------------
@@ -10,9 +13,11 @@ package body Rho.Camera is
         Rho.Render_Target.Rho_Render_Target_Record'Class)
    is
       use Rho.Matrices, Rho.Float_Arrays;
+      Renderer : constant Rho.Rendering.Rho_Renderer :=
+                   Camera.Context.Renderer;
    begin
       Target.Set_Viewport (Camera.Viewport);
-      Target.Matrix_Mode (Rho.Matrices.Projection);
+      Renderer.Matrix_Mode (Rho.Matrices.Projection);
 
       if Camera.Changed or else
         (Camera.Auto_Perspective
@@ -34,21 +39,22 @@ package body Rho.Camera is
                     0.0, Camera.Viewport.Height,
                     Camera.Near, Camera.Far);
             end case;
-            Target.Clear_Matrix_Saved;
+            Camera.Context.Renderer.Clear_Matrix_Saved;
+--              Target.Clear_Matrix_Saved;
          else
             if Camera.Perspective_Changed then
-               Target.Clear_Matrix_Saved;
+               Camera.Context.Renderer.Clear_Matrix_Saved;
                Camera.Perspective_Changed := False;
             end if;
          end if;
       end if;
 
-      Target.Set_Current (Camera.Projection_Matrix);
+      Renderer.Set_Current (Camera.Projection_Matrix);
 
-      Target.Matrix_Mode (Rho.Matrices.Model_View);
+      Renderer.Matrix_Mode (Rho.Matrices.Model_View);
 
       if Camera.Changed then
-         Target.Load_Identity;
+         Renderer.Load_Identity;
 
          declare
             M : Matrix_4 := Camera.Final_Transformation_Matrix;
@@ -67,13 +73,13 @@ package body Rho.Camera is
                M (I, 4) := -M (I, 4);
             end loop;
 
-            Target.Multiply (M);
+            Renderer.Multiply (M);
          end;
 
          declare
             P : Vector_4 := (0.0, 0.0, 0.0, 1.0);
          begin
-            P := Target.Current (Rho.Matrices.Model_View) * P;
+            P := Renderer.Current (Rho.Matrices.Model_View) * P;
             Target.Set_Camera_Position (P (1 .. 3));
          end;
       end if;

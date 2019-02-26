@@ -94,7 +94,8 @@ private
          Parameter_Value  : Ada.Strings.Unbounded.Unbounded_String;
          Implied          : Boolean := False;
          Byte_Offset      : Boolean := False;
-         Data_Array       : Boolean := False;
+         Generic_Array    : Boolean := False;
+         Argument_Array   : Boolean := False;
          String_Array     : Boolean := False;
          Writeable_Array  : Boolean := False;
          Object_Reference : Boolean := False;
@@ -109,16 +110,17 @@ private
 
    type Command_Record is
       record
-         Name            : Ada.Strings.Unbounded.Unbounded_String;
-         Ada_Name        : Ada.Strings.Unbounded.Unbounded_String;
-         Return_Type     : Ada.Strings.Unbounded.Unbounded_String;
-         Return_Group    : Ada.Strings.Unbounded.Unbounded_String;
-         Parameters      : Parameter_Lists.List;
-         GLX_Type        : Ada.Strings.Unbounded.Unbounded_String;
-         Opcode          : Natural := 0;
-         Creates_Object  : Boolean := False;
-         API_Override    : API_Flags := (others => False);
-         Have_Data_Array : Boolean := False;
+         Name                : Ada.Strings.Unbounded.Unbounded_String;
+         Ada_Name            : Ada.Strings.Unbounded.Unbounded_String;
+         Return_Type         : Ada.Strings.Unbounded.Unbounded_String;
+         Return_Group        : Ada.Strings.Unbounded.Unbounded_String;
+         Parameters          : Parameter_Lists.List;
+         GLX_Type            : Ada.Strings.Unbounded.Unbounded_String;
+         Opcode              : Natural := 0;
+         Creates_Object      : Boolean := False;
+         API_Override        : API_Flags := (others => False);
+         Have_Generic_Array  : Boolean := False;
+         Have_Argument_Array : Boolean := False;
       end record;
 
    package Command_Lists is

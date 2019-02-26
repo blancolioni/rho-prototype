@@ -65,6 +65,28 @@ package body Rho.Matrices is
       return State.Current_Mode;
    end Current_Matrix_Mode;
 
+   -------------
+   -- Frustum --
+   -------------
+
+   procedure Frustum
+     (Target      : in out Rho_Matrix_Operation_Record;
+      Left, Right : Rho_Float;
+      Bottom, Top : Rho_Float;
+      Near, Far   : Rho_Float)
+   is
+      A : constant Rho_Float := (Right + Left) / (Right - Left);
+      B : constant Rho_Float := (Top + Bottom) / (Top - Bottom);
+      C : constant Rho_Float := (Far + Near) / (Far - Near);
+      D : constant Rho_Float := 2.0 * Far * Near / (Far - Near);
+   begin
+      Target.Multiply
+        (((2.0 * Near / (Right - Left), 0.0, A, 0.0),
+         (0.0, 2.0 * Near / (Top - Bottom), B, 0.0),
+         (0.0, 0.0, C, D),
+         (0.0, 0.0, -1.0, 0.0)));
+   end Frustum;
+
    --------------------
    -- Frustum_Matrix --
    --------------------
@@ -154,6 +176,30 @@ package body Rho.Matrices is
    begin
       return V / abs V;
    end Normalise;
+
+   -----------
+   -- Ortho --
+   -----------
+
+   procedure Ortho
+     (Target      : in out Rho_Matrix_Operation_Record;
+      Left, Right : Rho_Float;
+      Bottom, Top : Rho_Float;
+      Near, Far   : Rho_Float)
+   is
+      TX : constant Rho_Float :=
+             (Right + Left) / (Right - Left);
+      TY : constant Rho_Float :=
+             (Top + Bottom) / (Top - Bottom);
+      TZ : constant Rho_Float :=
+             (Far + Near) / (Far - Near);
+   begin
+      Target.Multiply
+        (((2.0 / (Right - Left), 0.0, 0.0, -TX),
+         (0.0, 2.0 / (Top - Bottom), 0.0, -TY),
+         (0.0, 0.0, -2.0 / (Far - Near), -TZ),
+         (0.0, 0.0, 0.0, 1.0)));
+   end Ortho;
 
    -------------------------
    -- Orthographic_Matrix --

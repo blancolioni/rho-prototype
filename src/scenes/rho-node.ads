@@ -70,6 +70,10 @@ package Rho.Node is
      (Node : Rho_Node_Record)
       return Rho.Rectangle.Rho_Rectangle;
 
+   function Context
+     (Node : Rho_Node_Record'Class)
+      return access Rho.Context.Rho_Context_Record'Class;
+
    function Entity
      (Node : Rho_Node_Record)
       return Rho.Entity.Rho_Entity;
@@ -310,5 +314,10 @@ private
      (Node : in out Rho_Node_Record'Class);
 
    procedure Check_Identity (Node : in out Rho_Node_Record'Class);
+
+   function Context
+     (Node : Rho_Node_Record'Class)
+      return access Rho.Context.Rho_Context_Record'Class
+   is (Node.Context);
 
 end Rho.Node;

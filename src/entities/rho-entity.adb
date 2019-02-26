@@ -7,6 +7,9 @@ with Rho.Materials.Pass;
 
 with Rho.Names;
 
+with Rho.Context;
+with Rho.Rendering;
+
 package body Rho.Entity is
 
    ---------------
@@ -548,11 +551,15 @@ package body Rho.Entity is
 
                   Binding.Before_Render (Target);
 
-                  if not Target.Matrix_Saved (Rho.Matrices.Projection) then
-                     Target.Save_Matrix (Rho.Matrices.Projection);
+                  if not Entity.Context.Renderer.Matrix_Saved
+                    (Rho.Matrices.Projection)
+                  then
+                     Entity.Context.Renderer.Save_Matrix
+                       (Rho.Matrices.Projection);
                   end if;
 
-                  Target.Save_Matrix (Rho.Matrices.Model_View);
+                  Entity.Context.Renderer.Save_Matrix
+                    (Rho.Matrices.Model_View);
 
                   Binding.Execute_Render (Target);
                   Binding.After_Render (Target);

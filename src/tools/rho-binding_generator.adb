@@ -10,5 +10,5 @@ begin
       Name    => "GL_ES_VERSION_2_0",
       Number  => "2.0",
       Path    =>
-        "E:\home\fraser\Documents\kiln\rho-trunk\src\rendering\webgl");
+        "C:\Users\fwilson\Documents\kiln\rho-trunk\src\rendering\webgl");
 end Rho.Binding_Generator;

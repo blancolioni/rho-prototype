@@ -5,6 +5,116 @@ overrides = {
     glCreateProgram = {
        creates-object = yes
        }
+       
+    glClearDepthf = {
+      name = Clear_Depth
+      }
+    
+    glUniform1i = {
+      name = Uniform
+      }
+      
+    glUniform1f = {
+      name = Uniform
+      }
+      
+    glUniform1fv = {
+      name = Uniform
+      replace = yes
+      parameters = {
+        parameter = {
+          name = Location
+          type = GLint
+          }
+        parameter = {
+          name = Value
+          type = Float_Array
+          argument-array = yes
+          }
+        }
+      }
+
+    glUniform2fv = {
+      name = Uniform_2v
+      replace = yes
+      parameters = {
+        parameter = {
+          name = Location
+          type = GLint
+          }
+        parameter = {
+          name = Value
+          type = Float_Array
+          argument-array = yes
+          }
+        }
+      }
+      
+    glUniform3fv = {
+      name = Uniform_3v
+      replace = yes
+      parameters = {
+        parameter = {
+          name = Location
+          type = GLint
+          }
+        parameter = {
+          name = Value
+          type = Float_Array
+          argument-array = yes
+          }
+        }
+      }
+      
+    glUniform4fv = {
+      name = Uniform_4v
+      replace = yes
+      parameters = {
+        parameter = {
+          name = Location
+          type = GLint
+          }
+        parameter = {
+          name = Value
+          type = Float_Array
+          argument-array = yes
+          }
+        }
+      }
+      
+    glUniform1iv = {
+      name = Uniform
+      replace = yes
+      parameters = {
+        parameter = {
+          name = Location
+          type = GLint
+          }
+        parameter = {
+          name = Value
+          type = Int_Array
+          argument-array = yes
+          }
+        }
+     }
+    glUniform2f = {
+      name = Uniform
+      replace = yes
+      parameters = {
+        parameter = {
+          name = Location
+          type = GLint
+          }
+        parameter = {
+          name = Value_1
+          type = GLfloat
+          }
+        parameter = {
+          name = Value_2
+          type = GLfloat
+          }
+        }
+     }
     
     glShaderSource = {
       replace = yes

@@ -232,19 +232,21 @@ package body Rho.GL_API.Commands is
          declare
             Command : Command_Record :=
                         Command_Record'
-                          (Name            => +Binding.Config_Name,
-                           Ada_Name        =>
+                          (Name                => +Binding.Config_Name,
+                           Ada_Name            =>
                              +(Binding.Get ("name", "")),
-                           Return_Type     =>
+                           Return_Type         =>
                              +(Binding.Get ("return-type", "")),
-                           Return_Group    =>
+                           Return_Group        =>
                              +(Binding.Get ("return-group", "")),
-                           Parameters      => <>,
-                           GLX_Type        => <>,
-                           Opcode          => 0,
-                           API_Override    => <>,
-                           Have_Data_Array => <>,
-                           Creates_Object => Binding.Get ("creates-object"));
+                           Parameters          => <>,
+                           GLX_Type            => <>,
+                           Opcode              => 0,
+                           API_Override        => <>,
+                           Have_Generic_Array  => <>,
+                           Have_Argument_Array => <>,
+                           Creates_Object      =>
+                             Binding.Get ("creates-object"));
          begin
             if not Binding.Contains ("api") then
                Command.API_Override := (others => True);
@@ -273,8 +275,11 @@ package body Rho.GL_API.Commands is
                        Parameter_Config.Get ("implied"),
                      Byte_Offset      =>
                        Parameter_Config.Get ("byte-offset"),
-                     Data_Array =>
-                       Parameter_Config.Get ("data-array"),
+                     Generic_Array =>
+                       Parameter_Config.Get ("generic-array"),
+                     Argument_Array   =>
+                       Parameter_Config.Get ("argument-array")
+                     or else Parameter_Config.Get ("generic-array"),
                      Image_Data       =>
                        Parameter_Config.Get ("image-data"),
                      Html_Element_Id  =>
@@ -285,9 +290,12 @@ package body Rho.GL_API.Commands is
                        Parameter_Config.Get ("writeable-array"),
                      Object_Reference =>
                        Parameter_Config.Get ("object-reference")));
-               Command.Have_Data_Array :=
-                 Command.Have_Data_Array or else
-                 Command.Parameters.Last_Element.Data_Array;
+               Command.Have_Generic_Array :=
+                 Command.Have_Generic_Array or else
+                 Command.Parameters.Last_Element.Generic_Array;
+               Command.Have_Argument_Array :=
+                 Command.Have_Argument_Array or else
+                 Command.Parameters.Last_Element.Argument_Array;
             end loop;
             Document.Command_List.Append (Command);
 
@@ -367,8 +375,10 @@ package body Rho.GL_API.Commands is
       use type Ada.Strings.Unbounded.Unbounded_String;
    begin
       if Text = "const void *" then
-         Document.Current_Parameter.Data_Array := True;
-         Document.Current_Command.Have_Data_Array := True;
+         Document.Current_Parameter.Generic_Array := True;
+         Document.Current_Parameter.Argument_Array := True;
+         Document.Current_Command.Have_Generic_Array := True;
+         Document.Current_Command.Have_Argument_Array := True;
       elsif Text = "void *" or else Text = "void **" then
          Document.Current_Parameter.Writeable_Array := True;
       elsif Ada.Strings.Fixed.Trim (Text, Ada.Strings.Both) = "*"
@@ -441,7 +451,8 @@ package body Rho.GL_API.Commands is
       if Config.Get ("replace") then
          Command :=
            (Name            => Document.Current_Command.Name,
-            Ada_Name        => <>,
+            Ada_Name        =>
+              +(Config.Get ("name", -Command.Ada_Name)),
             Return_Type     =>
               +(Config.Get ("return-type", "")),
             Return_Group    =>
@@ -450,8 +461,9 @@ package body Rho.GL_API.Commands is
             GLX_Type        => <>,
             Opcode          => 0,
             API_Override    => <>,
-            Have_Data_Array => <>,
-            Creates_Object  =>
+            Have_Generic_Array => <>,
+            Have_Argument_Array => <>,
+            Creates_Object     =>
               Config.Get ("creates-object"));
 
          for Parameter_Config of Config.Child ("parameters") loop
@@ -469,8 +481,11 @@ package body Rho.GL_API.Commands is
                     Parameter_Config.Get ("implied"),
                   Byte_Offset      =>
                     Parameter_Config.Get ("byte-offset"),
-                  Data_Array       =>
-                    Parameter_Config.Get ("data-array"),
+                  Generic_Array    =>
+                    Parameter_Config.Get ("generic-array"),
+                  Argument_Array   =>
+                    Parameter_Config.Get ("argument-array")
+                  or else Parameter_Config.Get ("generic-array"),
                   Image_Data       =>
                     Parameter_Config.Get ("image-data"),
                   Html_Element_Id  =>
@@ -481,9 +496,12 @@ package body Rho.GL_API.Commands is
                     Parameter_Config.Get ("writeable-array"),
                   Object_Reference =>
                     Parameter_Config.Get ("object-reference")));
-            Command.Have_Data_Array :=
-              Command.Have_Data_Array or else
-              Command.Parameters.Last_Element.Data_Array;
+            Command.Have_Generic_Array :=
+              Command.Have_Generic_Array or else
+              Command.Parameters.Last_Element.Generic_Array;
+            Command.Have_Argument_Array :=
+              Command.Have_Argument_Array or else
+              Command.Parameters.Last_Element.Argument_Array;
          end loop;
       else
          if Config.Contains ("name") then
@@ -537,16 +555,26 @@ package body Rho.GL_API.Commands is
                            Parameter.Implied := Item.Get ("implied");
                         end if;
                         if Item.Contains ("byte-offset") then
-                           Parameter.Byte_Offset := Item.Get ("byte-offset");
+                           Parameter.Byte_Offset :=
+                             Item.Get ("byte-offset");
                         end if;
-                        if Item.Contains ("data-array") then
-                           Parameter.Data_Array := Item.Get ("data-array");
+                        if Item.Contains ("generic-array") then
+                           Parameter.Generic_Array :=
+                             Item.Get ("generic-array");
+                           if Parameter.Generic_Array then
+                              Parameter.Argument_Array := True;
+                           end if;
+                        end if;
+                        if Item.Contains ("argument-array") then
+                           Parameter.Argument_Array :=
+                             Item.Get ("argument-array");
                         end if;
                         if Item.Contains ("image-data") then
                            Parameter.Image_Data := Item.Get ("image-data");
                         end if;
                         if Item.Contains ("string-array") then
-                           Parameter.String_Array := Item.Get ("string-array");
+                           Parameter.String_Array :=
+                             Item.Get ("string-array");
                         end if;
                         if Item.Contains ("writeable-array") then
                            Parameter.Writeable_Array :=
@@ -559,8 +587,12 @@ package body Rho.GL_API.Commands is
                      end;
                   end if;
                end;
-               Command.Have_Data_Array :=
-                 Command.Have_Data_Array or else Parameter.Data_Array;
+               Command.Have_Generic_Array :=
+                 Command.Have_Generic_Array or else
+                 Command.Parameters.Last_Element.Generic_Array;
+               Command.Have_Argument_Array :=
+                 Command.Have_Argument_Array or else
+                 Command.Parameters.Last_Element.Argument_Array;
             end loop;
          end;
       end if;

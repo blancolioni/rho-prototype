@@ -289,7 +289,7 @@ package body Gnoga.Gui.Element.Canvas.Context_WebGL.Support is
 
    procedure Uniform_Matrix
      (Context  : in out Context_WebGL_Type'Class;
-      Location : GLuint;
+      Location : GLint;
       Matrix   : Matrix_4)
    is
       use Ada.Strings.Unbounded;
@@ -307,7 +307,7 @@ package body Gnoga.Gui.Element.Canvas.Context_WebGL.Support is
       declare
          Script : constant String :=
                     "uniformMatrix4fv("
-                       & Indexed_Object_Reference (Context, Location)
+                       & Indexed_Object_Reference (Context, GLuint (Location))
                        & ","
                        & "false"
                        & ","

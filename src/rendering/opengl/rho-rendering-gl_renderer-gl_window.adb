@@ -395,26 +395,6 @@ package body Rho.Rendering.GL_Renderer.GL_Window is
       Local_Top_Window.After_Resize;
    end Reshape_Handler;
 
-   -----------------
-   -- Save_Matrix --
-   -----------------
-
-   overriding procedure Save_Matrix
-     (Window : not null access Rho_GL_Window_Record;
-      Matrix : in Rho.Matrices.Matrix_Mode_Type)
-   is
-      Program : constant Rho.Shaders.Program.Rho_Program :=
-                  Rho.Shaders.Program.Rho_Program
-                    (Window.Current_Shader);
-   begin
-      Window.Activate_Shader;
-
-      Program.Uniform_Matrix_Value (Matrix).Set_Value
-        (Window.Current (Matrix));
-      Window.Set_Matrix_Saved (Matrix);
-
-   end Save_Matrix;
-
    ---------------------------
    -- Set_Back_Face_Removal --
    ---------------------------
@@ -574,47 +554,6 @@ package body Rho.Rendering.GL_Renderer.GL_Window is
       end if;
    end Set_Texture;
 
-   ----------------------
-   -- Set_Vertex_Array --
-   ----------------------
-
---     overriding procedure Set_Vertex_Array
---       (Target       : not null access Rho_GL_Window_Record;
---        Vertex_Array : Rho.Vertex_Array.Rho_Vertex_Array;
---        Operation    : Rho.Render_Operation.Operation_Type :=
---          Rho.Render_Operation.Triangle_List)
---     is
---        use Rho.Render_Operation;
---        pragma Unreferenced (Target);
---
---        To_GL_Operation : constant array (Operation_Type) of GLenum :=
---                            (Point_List     => GL_POINTS,
---                             Line_List      => GL_LINES,
---                             Line_Strip     => GL_LINE_STRIP,
---                             Triangle_List  => GL_TRIANGLES,
---                             Triangle_Strip => GL_TRIANGLE_STRIP,
---                             Triangle_Fan   => GL_TRIANGLE_FAN,
---                             Quad_List      => GL_QUADS);
---     begin
---        GL.Vertex_Attribute_Pointer
---          (Index        => 0,
---           Size         => 3,
---           Element_Type => GL_FLOAT,
---           Normalized   => GL_FALSE,
---           Stride       => 0,
---           Pointer      => 0);
---
---        GL.Enable_Vertex_Attribute_Array (0);
---
---        GL.Bind_Vertex_Array (Uint (Vertex_Array.Id));
---
---        GL.Draw_Arrays
---          (Mode  => To_GL_Operation (Operation),
---           First => 0,
---           Count => Sizei (Vertex_Array.Count));
---
---     end Set_Vertex_Array;
-
    ------------------
    -- Set_Viewport --
    ------------------
@@ -667,27 +606,6 @@ package body Rho.Rendering.GL_Renderer.GL_Window is
    begin
       Mouse_Move_Handler (X, Y);
    end Special_Key_Handler;
-
-   ------------------------
-   -- Texture_Coordinate --
-   ------------------------
-
---     overriding procedure Texture_Coordinate
---       (Item    : in out Rho_GL_Render_Operator;
---        S, T    : Rho_Float)
---     is
---        pragma Unreferenced (Item);
---        use Rho.Texture;
---     begin
---  --      if Texture.Loaded then
---  --           if Rho_Texture (Texture) /= Item.Current_Texture then
---  --              Item.Current_Texture := Rho_Texture (Texture);
---  --              GL.BindTexture (GL.TEXTURE_2D, GL.Uint (Texture.Id));
---  --           end if;
---
---        GL.Tex_Coord (GL.Double (S), GL.Double (T));
---    --    end if;
---     end Texture_Coordinate;
 
    -------------------------
    -- Uniform_Float_Array --

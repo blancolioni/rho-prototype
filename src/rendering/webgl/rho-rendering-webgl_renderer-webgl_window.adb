@@ -1,5 +1,5 @@
 with Rho.Logging;
-with Rho.Shaders.Program;
+with Rho.Shaders;
 
 package body Rho.Rendering.WebGL_Renderer.WebGL_Window is
 
@@ -52,14 +52,14 @@ package body Rho.Rendering.WebGL_Renderer.WebGL_Window is
       end if;
 
       Window.Context.Vertex_Attrib_Pointer
-        (Index        => GLuint (Attribute.Location),
+        (Index        => GLuint (Attribute.Attribute_Location),
          Size         => GLuint (Component_Size),
          Element_Type => GL_Float,
          Normalized   => False,
          Stride       => 0,
          Pointer      => Buffer.To_Offset (Start));
       Window.Context.Enable_Vertex_Attrib_Array
-        (GLuint (Attribute.Location));
+        (GLuint (Attribute.Attribute_Location));
 
    end Bind_Vertex_Attribute;
 
@@ -199,30 +199,6 @@ package body Rho.Rendering.WebGL_Renderer.WebGL_Window is
    begin
       return Item.Rectangle;
    end Get_Rectangle;
-
-   -----------------
-   -- Save_Matrix --
-   -----------------
-
-   overriding procedure Save_Matrix
-     (Window : not null access Rho_WebGL_Window_Record;
-      Matrix : in Rho.Matrices.Matrix_Mode_Type)
-   is
-   begin
-      Window.Activate_Shader;
-
-      declare
-         Shader : constant Rho.Shaders.Program.Rho_Program :=
-                    Rho.Shaders.Program.Rho_Program
-                      (Window.Current_Shader);
-      begin
-         Shader.Uniform_Matrix_Value (Matrix).Set_Value
-           (Window.Current (Matrix));
-      end;
-
-      Window.Set_Matrix_Saved (Matrix);
-
-   end Save_Matrix;
 
    ---------------------------
    -- Set_Back_Face_Removal --
@@ -435,14 +411,14 @@ package body Rho.Rendering.WebGL_Renderer.WebGL_Window is
    -- Uniform_Float_Array --
    -------------------------
 
-   overriding procedure Uniform_Float_Array
-     (Window   : not null access Rho_WebGL_Window_Record;
-      Uniform  : Rho.Shaders.Values.Rho_Uniform_Value;
-      Value    : Rho.Float_Arrays.Real_Vector)
-   is
-   begin
-      Window.Activate_Shader;
-      Uniform.Set_Value (Value);
-   end Uniform_Float_Array;
+--     overriding procedure Uniform_Float_Array
+--       (Window   : not null access Rho_WebGL_Window_Record;
+--        Uniform  : Rho.Shaders.Values.Rho_Uniform_Value;
+--        Value    : Rho.Float_Arrays.Real_Vector)
+--     is
+--     begin
+--        Window.Activate_Shader;
+--        Uniform.Set_Value (Value);
+--     end Uniform_Float_Array;
 
 end Rho.Rendering.WebGL_Renderer.WebGL_Window;

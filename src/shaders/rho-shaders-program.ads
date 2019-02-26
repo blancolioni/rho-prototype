@@ -1,6 +1,7 @@
+private with Ada.Containers.Doubly_Linked_Lists;
 private with Ada.Strings.Unbounded;
 
-with Rho.Rendering;
+--  with Rho.Rendering;
 with Rho.Shaders.Shader;
 with Rho.Shaders.Values;
 
@@ -17,11 +18,11 @@ package Rho.Shaders.Program is
 
    procedure Rho_New
      (Shader   : in out Rho_Program;
-      Renderer : Rho.Rendering.Rho_Renderer);
+      Context  : not null access Rho.Context.Rho_Context_Record'Class);
 
    procedure Rho_Initialize
      (Shader   : in out Rho_Program_Record'Class;
-      Renderer : Rho.Rendering.Rho_Renderer);
+      Context  : not null access Rho.Context.Rho_Context_Record'Class);
 
    procedure Destroy
      (Shader   : in out Rho_Program);
@@ -42,26 +43,26 @@ package Rho.Shaders.Program is
    function Id (Program : Rho_Program_Record'Class) return Rho_Program_Id;
 
    function Attribute_Value
-     (Program : Rho_Program_Record'Class;
+     (Program : not null access Rho_Program_Record'Class;
       Name    : String)
-      return Values.Rho_Attribute_Value;
+      return Rho.Shaders.Values.Rho_Attribute_Value;
 
    function Uniform_Value
-     (Program : Rho_Program_Record'Class;
+     (Program : not null access Rho_Program_Record'Class;
       Name    : String)
       return Rho.Shaders.Values.Rho_Uniform_Value;
 
    function Uniform_Matrix_Value
-     (Program : Rho_Program_Record'Class;
+     (Program : in out Rho_Program_Record'Class;
       Matrix  : Rho.Matrices.Matrix_Mode_Type)
       return Rho.Shaders.Values.Rho_Uniform_Value;
 
    function Create
-     (Renderer : not null access Rho.Rendering.Rho_Renderer_Record'Class)
+     (Context : not null access Rho.Context.Rho_Context_Record'Class)
       return Rho_Program;
 
    function Create
-     (Renderer : not null access Rho.Rendering.Rho_Renderer_Record'Class;
+     (Context  : not null access Rho.Context.Rho_Context_Record'Class;
       Shaders  : Rho.Shaders.Shader_Array)
       return Rho_Program;
 
@@ -69,6 +70,11 @@ private
 
    type Matrix_Uniform_Values is
      array (Rho.Matrices.Matrix_Mode_Type) of Values.Rho_Uniform_Value;
+
+   package Shader_Lists is
+     new Ada.Containers.Doubly_Linked_Lists
+       (Rho.Shaders.Shader.Rho_Shader,
+        Rho.Shaders.Shader."=");
 
    type Rho_Program_Record is
      new Rho.Object.Rho_Resource_Record
@@ -78,10 +84,15 @@ private
          Log      : Ada.Strings.Unbounded.Unbounded_String;
          Matrices : Matrix_Uniform_Values;
          Error    : Boolean;
-         Renderer : Rho.Rendering.Rho_Renderer;
+         Context  : access Rho.Context.Rho_Context_Record'Class;
+         Shaders  : Shader_Lists.List;
       end record;
 
    overriding procedure Activate (Shader : in out Rho_Program_Record);
    overriding procedure Deactivate (Shader : in out Rho_Program_Record);
+   overriding function Context
+     (Program : Rho_Program_Record)
+      return not null access Rho.Context.Rho_Context_Record'Class
+   is (Program.Context);
 
 end Rho.Shaders.Program;

@@ -33,7 +33,7 @@ package Rho.Value is
 
    procedure Set_Uniform_Value
      (Value    : Rho_Value_Record'Class;
-      Location : Uniform_Location_Type);
+      Location : Rho_Uniform_Id);
 
    function Default_Value
      (Of_Type : Value_Type)

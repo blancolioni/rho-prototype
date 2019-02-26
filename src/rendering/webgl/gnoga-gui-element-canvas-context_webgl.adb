@@ -48,7 +48,7 @@ package body Gnoga.Gui.Element.Canvas.Context_WebGL is
 
    procedure Uniform_Matrix
      (Context  : in out Context_WebGL_Type'Class;
-      Location : GLuint;
+      Location : GLint;
       Matrix   : Matrix_4)
    renames Support.Uniform_Matrix;
 
@@ -2012,10 +2012,10 @@ Context.Execute (
    end Depth_Mask;
 
    -------------------
-   -- Depth_Range --
+   -- Depth_Rangef --
    -------------------
 
-   procedure Depth_Range
+   procedure Depth_Rangef
      (Context : in out Context_WebGL_Type'Class;
       N : GLfloat;
       F : GLfloat)
@@ -2034,7 +2034,7 @@ Context.Execute (
          & Support.Image (F)
         & ")");
       end if;
-   end Depth_Range;
+   end Depth_Rangef;
 
    --------------------
    -- Detach_Shader --
@@ -4024,10 +4024,10 @@ Context.Execute (
    end Tex_Image_2D;
 
    ---------------------
-   -- Tex_Parameter --
+   -- Tex_Parameterf --
    ---------------------
 
-   procedure Tex_Parameter
+   procedure Tex_Parameterf
      (Context : in out Context_WebGL_Type'Class;
       Target : Texture_Target;
       Pname : Texture_Parameter_Name;
@@ -4049,7 +4049,7 @@ Context.Execute (
          & Support.Image (Param)
         & ")");
       end if;
-   end Tex_Parameter;
+   end Tex_Parameterf;
 
    ----------------------
    -- Tex_Parameterfv --
@@ -4298,10 +4298,10 @@ Context.Execute (
    end Tex_Sub_Image_2D;
 
    -----------------
-   -- Uniform_1 --
+   -- Uniform --
    -----------------
 
-   procedure Uniform_1
+   procedure Uniform
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
       V0 : GLfloat)
@@ -4320,41 +4320,46 @@ Context.Execute (
          & Support.Image (V0)
         & ")");
       end if;
-   end Uniform_1;
+   end Uniform;
 
    ------------------
-   -- Uniform_1fv --
+   -- Uniform --
    ------------------
 
-   procedure Uniform_1fv
+   procedure Uniform
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
-      Count : GLsizei;
-      Value : GLfloat)
+      Value : Float_Array)
    is
+      use Ada.Strings.Unbounded;
+      Data_Image : Unbounded_String;
    begin
+      for X of Value loop
+         if Data_Image /= "" then
+            Data_Image := Data_Image & ",";
+         end if;
+         Data_Image := Data_Image & X'Image;
+      end loop;
       if Context.Rendering then
          Context.Render_Script.Append (
            "gl.uniform1fv("
          & Location'Image & ","
-         & Count'Image & ","
-         & Support.Image (Value)
+         & "new Float32Array([" & To_String (Data_Image) & "])"
            & ")");
       else
 Context.Execute (
         "uniform1fv("
          & Location'Image & ","
-         & Count'Image & ","
-         & Support.Image (Value)
+         & "new Float32Array([" & To_String (Data_Image) & "])"
         & ")");
       end if;
-   end Uniform_1fv;
+   end Uniform;
 
    -----------------
-   -- Uniform_1i --
+   -- Uniform --
    -----------------
 
-   procedure Uniform_1i
+   procedure Uniform
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
       V0 : GLint)
@@ -4373,91 +4378,101 @@ Context.Execute (
          & V0'Image
         & ")");
       end if;
-   end Uniform_1i;
+   end Uniform;
 
    ------------------
-   -- Uniform_1iv --
+   -- Uniform --
    ------------------
 
-   procedure Uniform_1iv
+   procedure Uniform
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
-      Count : GLsizei;
-      Value : GLint)
+      Value : Int_Array)
    is
+      use Ada.Strings.Unbounded;
+      Data_Image : Unbounded_String;
    begin
+      for X of Value loop
+         if Data_Image /= "" then
+            Data_Image := Data_Image & ",";
+         end if;
+         Data_Image := Data_Image & X'Image;
+      end loop;
       if Context.Rendering then
          Context.Render_Script.Append (
            "gl.uniform1iv("
          & Location'Image & ","
-         & Count'Image & ","
-         & Value'Image
+         & "new Int32Array([" & To_String (Data_Image) & "])"
            & ")");
       else
 Context.Execute (
         "uniform1iv("
          & Location'Image & ","
-         & Count'Image & ","
-         & Value'Image
+         & "new Int32Array([" & To_String (Data_Image) & "])"
         & ")");
       end if;
-   end Uniform_1iv;
+   end Uniform;
 
    -----------------
-   -- Uniform_2 --
+   -- Uniform --
    -----------------
 
-   procedure Uniform_2
+   procedure Uniform
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
-      V0 : GLfloat;
-      V1 : GLfloat)
+      Value_1 : GLfloat;
+      Value_2 : GLfloat)
    is
    begin
       if Context.Rendering then
          Context.Render_Script.Append (
            "gl.uniform2("
          & Location'Image & ","
-         & Support.Image (V0) & ","
-         & Support.Image (V1)
+         & Support.Image (Value_1) & ","
+         & Support.Image (Value_2)
            & ")");
       else
 Context.Execute (
         "uniform2("
          & Location'Image & ","
-         & Support.Image (V0) & ","
-         & Support.Image (V1)
+         & Support.Image (Value_1) & ","
+         & Support.Image (Value_2)
         & ")");
       end if;
-   end Uniform_2;
+   end Uniform;
 
    ------------------
-   -- Uniform_2fv --
+   -- Uniform_2v --
    ------------------
 
-   procedure Uniform_2fv
+   procedure Uniform_2v
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
-      Count : GLsizei;
-      Value : GLfloat)
+      Value : Float_Array)
    is
+      use Ada.Strings.Unbounded;
+      Data_Image : Unbounded_String;
    begin
+      for X of Value loop
+         if Data_Image /= "" then
+            Data_Image := Data_Image & ",";
+         end if;
+         Data_Image := Data_Image & X'Image;
+      end loop;
       if Context.Rendering then
          Context.Render_Script.Append (
            "gl.uniform2fv("
          & Location'Image & ","
-         & Count'Image & ","
-         & Support.Image (Value)
+         & "new Float32Array([" & To_String (Data_Image) & "])"
            & ")");
       else
 Context.Execute (
         "uniform2fv("
          & Location'Image & ","
-         & Count'Image & ","
-         & Support.Image (Value)
+         & "new Float32Array([" & To_String (Data_Image) & "])"
         & ")");
       end if;
-   end Uniform_2fv;
+   end Uniform_2v;
 
    -----------------
    -- Uniform_2i --
@@ -4516,10 +4531,10 @@ Context.Execute (
    end Uniform_2iv;
 
    -----------------
-   -- Uniform_3 --
+   -- Uniform_3f --
    -----------------
 
-   procedure Uniform_3
+   procedure Uniform_3f
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
       V0 : GLfloat;
@@ -4544,35 +4559,40 @@ Context.Execute (
          & Support.Image (V2)
         & ")");
       end if;
-   end Uniform_3;
+   end Uniform_3f;
 
    ------------------
-   -- Uniform_3fv --
+   -- Uniform_3v --
    ------------------
 
-   procedure Uniform_3fv
+   procedure Uniform_3v
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
-      Count : GLsizei;
-      Value : GLfloat)
+      Value : Float_Array)
    is
+      use Ada.Strings.Unbounded;
+      Data_Image : Unbounded_String;
    begin
+      for X of Value loop
+         if Data_Image /= "" then
+            Data_Image := Data_Image & ",";
+         end if;
+         Data_Image := Data_Image & X'Image;
+      end loop;
       if Context.Rendering then
          Context.Render_Script.Append (
            "gl.uniform3fv("
          & Location'Image & ","
-         & Count'Image & ","
-         & Support.Image (Value)
+         & "new Float32Array([" & To_String (Data_Image) & "])"
            & ")");
       else
 Context.Execute (
         "uniform3fv("
          & Location'Image & ","
-         & Count'Image & ","
-         & Support.Image (Value)
+         & "new Float32Array([" & To_String (Data_Image) & "])"
         & ")");
       end if;
-   end Uniform_3fv;
+   end Uniform_3v;
 
    -----------------
    -- Uniform_3i --
@@ -4634,10 +4654,10 @@ Context.Execute (
    end Uniform_3iv;
 
    -----------------
-   -- Uniform_4 --
+   -- Uniform_4f --
    -----------------
 
-   procedure Uniform_4
+   procedure Uniform_4f
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
       V0 : GLfloat;
@@ -4665,35 +4685,40 @@ Context.Execute (
          & Support.Image (V3)
         & ")");
       end if;
-   end Uniform_4;
+   end Uniform_4f;
 
    ------------------
-   -- Uniform_4fv --
+   -- Uniform_4v --
    ------------------
 
-   procedure Uniform_4fv
+   procedure Uniform_4v
      (Context : in out Context_WebGL_Type'Class;
       Location : GLint;
-      Count : GLsizei;
-      Value : GLfloat)
+      Value : Float_Array)
    is
+      use Ada.Strings.Unbounded;
+      Data_Image : Unbounded_String;
    begin
+      for X of Value loop
+         if Data_Image /= "" then
+            Data_Image := Data_Image & ",";
+         end if;
+         Data_Image := Data_Image & X'Image;
+      end loop;
       if Context.Rendering then
          Context.Render_Script.Append (
            "gl.uniform4fv("
          & Location'Image & ","
-         & Count'Image & ","
-         & Support.Image (Value)
+         & "new Float32Array([" & To_String (Data_Image) & "])"
            & ")");
       else
 Context.Execute (
         "uniform4fv("
          & Location'Image & ","
-         & Count'Image & ","
-         & Support.Image (Value)
+         & "new Float32Array([" & To_String (Data_Image) & "])"
         & ")");
       end if;
-   end Uniform_4fv;
+   end Uniform_4v;
 
    -----------------
    -- Uniform_4i --
@@ -4895,10 +4920,10 @@ Context.Execute (
    end Validate_Program;
 
    ----------------------
-   -- Vertex_Attrib_1 --
+   -- Vertex_Attrib_1f --
    ----------------------
 
-   procedure Vertex_Attrib_1
+   procedure Vertex_Attrib_1f
      (Context : in out Context_WebGL_Type'Class;
       Index : GLuint;
       X : GLfloat)
@@ -4917,7 +4942,7 @@ Context.Execute (
          & Support.Image (X)
         & ")");
       end if;
-   end Vertex_Attrib_1;
+   end Vertex_Attrib_1f;
 
    -----------------------
    -- Vertex_Attrib_1fv --
@@ -4945,10 +4970,10 @@ Context.Execute (
    end Vertex_Attrib_1fv;
 
    ----------------------
-   -- Vertex_Attrib_2 --
+   -- Vertex_Attrib_2f --
    ----------------------
 
-   procedure Vertex_Attrib_2
+   procedure Vertex_Attrib_2f
      (Context : in out Context_WebGL_Type'Class;
       Index : GLuint;
       X : GLfloat;
@@ -4970,7 +4995,7 @@ Context.Execute (
          & Support.Image (Y)
         & ")");
       end if;
-   end Vertex_Attrib_2;
+   end Vertex_Attrib_2f;
 
    -----------------------
    -- Vertex_Attrib_2fv --
@@ -4998,10 +5023,10 @@ Context.Execute (
    end Vertex_Attrib_2fv;
 
    ----------------------
-   -- Vertex_Attrib_3 --
+   -- Vertex_Attrib_3f --
    ----------------------
 
-   procedure Vertex_Attrib_3
+   procedure Vertex_Attrib_3f
      (Context : in out Context_WebGL_Type'Class;
       Index : GLuint;
       X : GLfloat;
@@ -5026,7 +5051,7 @@ Context.Execute (
          & Support.Image (Z)
         & ")");
       end if;
-   end Vertex_Attrib_3;
+   end Vertex_Attrib_3f;
 
    -----------------------
    -- Vertex_Attrib_3fv --
@@ -5054,10 +5079,10 @@ Context.Execute (
    end Vertex_Attrib_3fv;
 
    ----------------------
-   -- Vertex_Attrib_4 --
+   -- Vertex_Attrib_4f --
    ----------------------
 
-   procedure Vertex_Attrib_4
+   procedure Vertex_Attrib_4f
      (Context : in out Context_WebGL_Type'Class;
       Index : GLuint;
       X : GLfloat;
@@ -5085,7 +5110,7 @@ Context.Execute (
          & Support.Image (W)
         & ")");
       end if;
-   end Vertex_Attrib_4;
+   end Vertex_Attrib_4f;
 
    -----------------------
    -- Vertex_Attrib_4fv --

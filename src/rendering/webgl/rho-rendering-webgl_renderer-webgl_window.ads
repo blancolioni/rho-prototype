@@ -1,7 +1,6 @@
 with Gnoga.Gui.Element.Canvas.Context_WebGL;
 
 with Rho.Color;
-with Rho.Float_Arrays;
 with Rho.Matrices;
 with Rho.Rectangle;
 with Rho.Render_Operation;
@@ -41,14 +40,10 @@ package Rho.Rendering.WEbGL_Renderer.WebGL_Window is
      (Window  : in out Rho_WebGL_Window_Record;
       Enabled : Boolean);
 
-   overriding procedure Save_Matrix
-     (Window : not null access Rho_WebGL_Window_Record;
-      Matrix : in Rho.Matrices.Matrix_Mode_Type);
-
-   overriding procedure Uniform_Float_Array
-     (Window   : not null access Rho_WebGL_Window_Record;
-      Uniform  : Rho.Shaders.Values.Rho_Uniform_Value;
-      Value    : Rho.Float_Arrays.Real_Vector);
+--     overriding procedure Uniform_Float_Array
+--       (Window   : not null access Rho_WebGL_Window_Record;
+--        Uniform  : Rho.Shaders.Values.Rho_Uniform_Value;
+--        Value    : Rho.Float_Arrays.Real_Vector);
 
    function Create_Top_Level_Window
      (Parent : in out Gnoga.Gui.Element.Element_Type'Class)

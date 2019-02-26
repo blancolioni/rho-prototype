@@ -13,13 +13,14 @@ package body Rho.Shaders.Loader is
    ------------------------
 
    function Create_From_Source
-     (Renderer    : Rho.Rendering.Rho_Renderer;
+     (Context     : not null access Rho.Context.Rho_Context_Record'Class;
       Shader      : Rho_Shader_Type;
       Source_Text : String)
       return Rho.Shaders.Shader.Rho_Shader
    is
    begin
-      return Rho.Shaders.Shader.Create_Shader (Renderer, Shader, Source_Text);
+      return Rho.Shaders.Shader.Create_Shader
+        (Context.Renderer, Shader, Source_Text);
    end Create_From_Source;
 
    ----------
@@ -27,17 +28,17 @@ package body Rho.Shaders.Loader is
    ----------
 
    function Load
-     (Renderer : Rho.Rendering.Rho_Renderer;
-      Path     : String)
+     (Context     : not null access Rho.Context.Rho_Context_Record'Class;
+      Path        : String)
       return Rho.Shaders.Shader.Rho_Shader
    is
       Extension : constant String :=
                     Ada.Directories.Extension (Path);
    begin
       if Extension = "frag" then
-         return Load (Renderer, Fragment_Shader, Path);
+         return Load (Context, Fragment_Shader, Path);
       elsif Extension = "vert" then
-         return Load (Renderer, Vertex_Shader, Path);
+         return Load (Context, Vertex_Shader, Path);
       else
          raise Constraint_Error with
            "cannot determine shader type from extension: ." & Extension;
@@ -49,21 +50,22 @@ package body Rho.Shaders.Loader is
    ----------
 
    function Load
-     (Renderer             : Rho.Rendering.Rho_Renderer;
+     (Context              : not null access
+        Rho.Context.Rho_Context_Record'Class;
       Vertex_Shader_Path   : String;
       Fragment_Shader_Path : String)
       return Rho.Shaders.Rho_Shader
    is
       Vertex_Shader : constant Rho.Shaders.Shader.Rho_Shader :=
-                        Load (Renderer, Rho.Shaders.Vertex_Shader,
+                        Load (Context, Rho.Shaders.Vertex_Shader,
                               Vertex_Shader_Path);
       Fragment_Shader : constant Rho.Shaders.Shader.Rho_Shader :=
-                          Load (Renderer, Rho.Shaders.Fragment_Shader,
+                          Load (Context, Rho.Shaders.Fragment_Shader,
                                 Fragment_Shader_Path);
    begin
       return Rho.Shaders.Rho_Shader
         (Rho.Shaders.Program.Create
-           (Renderer => Renderer,
+           (Context  => Context,
             Shaders  => (Vertex_Shader.Id, Fragment_Shader.Id)));
    end Load;
 
@@ -72,8 +74,8 @@ package body Rho.Shaders.Loader is
    ----------
 
    function Load
-     (Renderer : Rho.Rendering.Rho_Renderer;
-      Shader   : Rho_Shader_Type;
+     (Context     : not null access Rho.Context.Rho_Context_Record'Class;
+      Shader      : Rho_Shader_Type;
       Path     : String)
       return Rho.Shaders.Shader.Rho_Shader
    is
@@ -92,7 +94,7 @@ package body Rho.Shaders.Loader is
       Close (File);
 
       return Create_From_Source
-        (Renderer    => Renderer,
+        (Context     => Context,
          Shader      => Shader,
          Source_Text => To_String (Buffer));
    end Load;
@@ -102,19 +104,19 @@ package body Rho.Shaders.Loader is
    --------------------------
 
    function Load_Standard_Shader
-     (Renderer : Rho.Rendering.Rho_Renderer;
-      Name     : String)
+     (Context     : not null access Rho.Context.Rho_Context_Record'Class;
+      Name        : String)
       return Rho_Shader
    is
       Vertex   : constant Rho.Shaders.Shader.Rho_Shader :=
-                   Load (Renderer,
+                   Load (Context,
                          Rho.Paths.Config_File ("shaders/" & Name & ".vert"));
       Fragment : constant Rho.Shaders.Shader.Rho_Shader :=
-                   Load (Renderer,
+                   Load (Context,
                          Rho.Paths.Config_File ("shaders/" & Name & ".frag"));
    begin
       return Rho_Shader
-        (Rho.Shaders.Program.Create (Renderer, (Vertex.Id, Fragment.Id)));
+        (Rho.Shaders.Program.Create (Context, (Vertex.Id, Fragment.Id)));
    end Load_Standard_Shader;
 
 end Rho.Shaders.Loader;

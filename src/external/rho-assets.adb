@@ -252,7 +252,7 @@ package body Rho.Assets is
                        Ada.Directories.Simple_Name (Path);
          Program   : constant Rho.Shaders.Rho_Shader :=
                        Rho.Shaders.Loader.Load
-                         (Handle.Context.Renderer, Base_Name, Base_Name);
+                         (Handle.Context, Base_Name, Base_Name);
       begin
          return Rho.Object.Rho_Object (Program);
       end Load;

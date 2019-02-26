@@ -1,7 +1,11 @@
+private with Ada.Containers.Doubly_Linked_Lists;
+
 with Cairo;
 
 with Rho.Color;
+with Rho.Float_Arrays;
 with Rho.Float_Buffer;
+with Rho.Matrices;
 with Rho.Rectangle;
 with Rho.Render_Target;
 with Rho.Render_Window;
@@ -12,7 +16,10 @@ package Rho.Rendering is
 
    Render_Error : exception;
 
-   type Rho_Renderer_Record is abstract tagged limited private;
+   type Integer_Array is array (Positive range <>) of Integer;
+
+   type Rho_Renderer_Record is
+     abstract new Rho.Matrices.Rho_Matrix_Operation_Record with private;
 
    procedure Render_Loop
      (Renderer : not null access Rho_Renderer_Record)
@@ -76,20 +83,124 @@ package Rho.Rendering is
       return Rho_Shader_Id
       is abstract;
 
+   procedure Use_Shader
+     (Renderer : in out Rho_Renderer_Record;
+      Shader   : Rho_Program_Id)
+   is abstract;
+
    function Create_Program
      (Renderer : in out Rho_Renderer_Record;
       Shaders  : Rho.Shaders.Shader_Array)
       return Rho_Program_Id
       is abstract;
 
-   type Rho_Renderer is access all Rho_Renderer_Record'Class;
+   function Get_Attribute_Location
+     (Renderer : Rho_Renderer_Record;
+      Program  : Rho_Program_Id;
+      Name     : String)
+      return Rho_Attribute_Id
+      is abstract;
 
-   function Create_Renderer
-     (Name : String)
-      return Rho_Renderer;
+   function Get_Uniform_Location
+     (Renderer : Rho_Renderer_Record;
+      Program  : Rho_Program_Id;
+      Name     : String)
+      return Rho_Uniform_Id
+      is abstract;
+
+   procedure Bind_Vertex_Buffer
+     (Renderer       : in out Rho_Renderer_Record;
+      Attribute      : Rho_Attribute_Id;
+      Buffer         : Rho.Float_Buffer.Rho_Float_Buffer;
+      Start          : Positive;
+      Component_Size : Positive)
+   is abstract;
+
+   procedure Set_Uniform_Value
+     (Renderer   : in out Rho_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Integer)
+   is abstract;
+
+   procedure Set_Uniform_Value
+     (Renderer   : in out Rho_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Rho_Float)
+   is abstract;
+
+   procedure Set_Uniform_Value
+     (Renderer   : in out Rho_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Rho.Float_Arrays.Real_Vector)
+   is abstract;
+
+   procedure Set_Uniform_Value
+     (Renderer   : in out Rho_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Rho.Float_Arrays.Real_Matrix)
+   is abstract;
+
+   procedure Set_Uniform_Value
+     (Renderer   : in out Rho_Renderer_Record;
+      Id         : Rho_Uniform_Id;
+      Value      : Integer_Array)
+   is abstract;
+
+   procedure Set_Uniform_Vector_Array
+     (Renderer     : in out Rho_Renderer_Record;
+      Id           : Rho_Uniform_Id;
+      Element_Size : Positive;
+      Value        : Rho.Float_Arrays.Real_Vector)
+   is abstract;
+
+   function Matrix_Saved
+     (Target : Rho_Renderer_Record'Class;
+      Matrix : Rho.Matrices.Matrix_Mode_Type)
+      return Boolean;
+
+   procedure Clear_Matrix_Saved
+     (Target : in out Rho_Renderer_Record'Class);
+
+   procedure Set_Matrix_Saved
+     (Target : in out Rho_Renderer_Record'Class;
+      Matrix : Rho.Matrices.Matrix_Mode_Type);
+
+   procedure Save_Matrix
+     (Renderer : in out Rho_Renderer_Record;
+      Matrix   : Rho.Matrices.Matrix_Mode_Type);
+
+   procedure Push_Shader
+     (Target : in out Rho_Renderer_Record;
+      Shader : Rho.Shaders.Rho_Shader)
+     with Pre => Rho.Shaders."/=" (Shader, null);
+
+   procedure Pop_Shader
+     (Target : in out Rho_Renderer_Record);
+
+   function Current_Shader
+     (Target : Rho_Renderer_Record)
+      return Rho.Shaders.Rho_Shader;
+
+   procedure Activate_Shader
+     (Target : in out Rho_Renderer_Record);
+
+   type Rho_Renderer is access all Rho_Renderer_Record'Class;
 
 private
 
-   type Rho_Renderer_Record is abstract tagged limited null record;
+   package List_Of_Shaders is
+     new Ada.Containers.Doubly_Linked_Lists
+       (Rho.Shaders.Rho_Shader, Rho.Shaders."=");
+
+   type Matrix_Flags is array (Rho.Matrices.Matrix_Mode_Type) of Boolean;
+
+   type Rho_Renderer_Record is
+     abstract new Rho.Matrices.Rho_Matrix_Operation_Record with
+      record
+         Shaders        : List_Of_Shaders.List;
+         Active_Shader  : Boolean := False;
+         Current_Shader : Rho.Shaders.Rho_Shader;
+         Matrix_Saved   : Matrix_Flags := (others => False);
+      end record;
 
 end Rho.Rendering;

@@ -10,8 +10,6 @@ with Rho.Shaders.Shader;
 with Rho.Materials.Material;
 with Rho.Materials.Templates;
 
-with Rho.Context;
-
 with Rho.Paths;
 
 package body Rho.Materials.Pass is
@@ -50,8 +48,8 @@ package body Rho.Materials.Pass is
         Rho.Render_Target.Rho_Render_Target_Record'Class)
    is
    begin
-      Target.Push_Shader (Pass.Shader);
-      Target.Activate_Shader;
+      Pass.Technique.Material.Context.Renderer.Push_Shader (Pass.Shader);
+      Pass.Technique.Material.Context.Renderer.Activate_Shader;
 
       if Pass.Has_Texture then
          Target.Set_Texture (Pass.Texture);
@@ -393,7 +391,7 @@ package body Rho.Materials.Pass is
          begin
             Vertex :=
               Rho.Shaders.Loader.Create_From_Source
-                (Pass.Technique.Material.Context.Renderer,
+                (Pass.Technique.Material.Context,
                  Rho.Shaders.Vertex_Shader,
                  Vertex_Source);
          end;
@@ -407,14 +405,14 @@ package body Rho.Materials.Pass is
          begin
             Fragment :=
               Rho.Shaders.Loader.Create_From_Source
-                (Pass.Technique.Material.Context.Renderer,
+                (Pass.Technique.Material.Context,
                  Rho.Shaders.Fragment_Shader, Fragment_Source);
          end;
 
          declare
             Program : constant Rho.Shaders.Program.Rho_Program :=
                         Rho.Shaders.Program.Create
-                          (Pass.Technique.Material.Context.Renderer);
+                          (Pass.Technique.Material.Context);
          begin
             Program.Add (Vertex);
             Program.Add (Fragment);
@@ -439,8 +437,9 @@ package body Rho.Materials.Pass is
       Target    : not null access
         Rho.Render_Target.Rho_Render_Target_Record'Class)
    is
+
    begin
-      Target.Pop_Shader;
+      Pass.Technique.Material.Context.Renderer.Pop_Shader;
       case Pass.Polygon_Mode is
          when Solid =>
             null;

@@ -107,7 +107,7 @@ package body Rho.Value is
 
    procedure Set_Uniform_Value
      (Value    : Rho_Value_Record'Class;
-      Location : Uniform_Location_Type)
+      Location : Rho_Uniform_Id)
    is
       GL_Loc : constant GL_Types.Uint :=
                  GL_Types.Uint (Location);
