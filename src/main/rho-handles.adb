@@ -185,7 +185,8 @@ package body Rho.Handles is
    ----------------
 
    function New_Handle
-     (Event_Source : Render_Event_Access)
+     (Event_Source  : Render_Event_Access;
+      Shader_Folder : String)
       return Rho_Handle
    is
    begin
@@ -200,7 +201,8 @@ package body Rho.Handles is
          Rho.Assets.Add_Folder_Name (Handle.Assets, "texture", "textures");
          Rho.Assets.Add_Folder_Name (Handle.Assets, "mesh", "mesh");
          Rho.Assets.Add_Folder_Name (Handle.Assets, "material", "material");
-         Rho.Assets.Add_Folder_Name (Handle.Assets, "shader", "shaders");
+         Rho.Assets.Add_Folder_Name
+           (Handle.Assets, "shader", "shaders/" & Shader_Folder);
       end return;
    end New_Handle;
 

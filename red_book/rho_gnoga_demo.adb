@@ -34,7 +34,8 @@ package body Rho_Gnoga_Demo is
       App.View.Create (Main_Window);
       App.Handle :=
         Rho.Handles.New_Handle
-          (Event_Source => Rho.Rendering.WebGL_Renderer.WebGL_Event_Source);
+          (Event_Source  => Rho.Rendering.WebGL_Renderer.WebGL_Event_Source,
+           Shader_Folder => "webgl");
 
       declare
          Renderer : constant Rho.Rendering.Rho_Renderer :=

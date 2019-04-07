@@ -18,6 +18,52 @@ package body Rho.Shaders.Values is
         (Attribute.Attribute_Location, Buffer, Start, Component_Size);
    end Bind_Vertex_Buffer;
 
+   -------------------------
+   -- New_Attribute_Value --
+   -------------------------
+
+   function New_Attribute_Value
+     (Shader : Rho_Shader;
+      Id     : Rho_Attribute_Id;
+      Name   : String)
+      return Rho_Attribute_Value
+   is
+   begin
+      return Value : constant Rho_Attribute_Value :=
+        new Rho_Attribute_Value_Record'
+          (Rho.Object.Rho_Object_Record with
+             Class    => Attribute,
+           Shader   => Shader,
+           Loc      => Rho_Shader_Location_Id (Id),
+           Context  => Shader.Context)
+      do
+         Value.Set_Name (Name);
+      end return;
+   end New_Attribute_Value;
+
+   -----------------------
+   -- New_Uniform_Value --
+   -----------------------
+
+   function New_Uniform_Value
+     (Shader : Rho_Shader;
+      Id     : Rho_Uniform_Id;
+      Name   : String)
+      return Rho_Uniform_Value
+   is
+   begin
+      return Value : constant Rho_Uniform_Value :=
+        new Rho_Uniform_Value_Record'
+          (Rho.Object.Rho_Object_Record with
+             Class    => Uniform,
+           Shader   => Shader,
+           Loc      => Rho_Shader_Location_Id (Id),
+           Context  => Shader.Context)
+      do
+         Value.Set_Name (Name);
+      end return;
+   end New_Uniform_Value;
+
    ---------------
    -- Set_Array --
    ---------------

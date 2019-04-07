@@ -172,7 +172,7 @@ package body Rho.Main is
       Asset_Handle.Add_Folder_Name ("texture", "textures");
       Asset_Handle.Add_Folder_Name ("mesh", "mesh");
       Asset_Handle.Add_Folder_Name ("material", "material");
-      Asset_Handle.Add_Folder_Name ("shader", "shaders");
+      Asset_Handle.Add_Folder_Name ("shader", "shaders/gl");
 
    end Init;
 

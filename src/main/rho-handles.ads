@@ -60,7 +60,8 @@ package Rho.Handles is
    type Render_Event_Access is access all Render_Event_Source'Class;
 
    function New_Handle
-     (Event_Source : Render_Event_Access)
+     (Event_Source  : Render_Event_Access;
+      Shader_Folder : String)
       return Rho_Handle;
 
    procedure Delete_Handle

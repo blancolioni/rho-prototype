@@ -1,3 +1,4 @@
+with Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 
 with System.Storage_Elements;
@@ -381,6 +382,10 @@ package body Rho.Rendering.WebGL_Renderer is
                    when Rho.Shaders.Vertex_Shader   => GL_Vertex_Shader,
                    when Rho.Shaders.Fragment_Shader => GL_Fragment_Shader);
    begin
+
+      Ada.Text_IO.Put_Line (Shader'Image);
+      Ada.Text_IO.Put_Line (Source);
+      Ada.Text_IO.Put_Line ("-----------------------");
 
       GL.Shader_Source
         (Shader => Id,

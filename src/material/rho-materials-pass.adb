@@ -171,10 +171,12 @@ package body Rho.Materials.Pass is
       Shader : constant Rho.Shaders.Program.Rho_Program :=
                  Rho.Shaders.Program.Rho_Program (Pass.Shader);
    begin
-      Pass.Attributes.Append (Shader.Attribute_Value ("vert"));
-      Pass.Attributes.Append (Shader.Attribute_Value ("vertNormal"));
-      Pass.Attributes.Append (Shader.Attribute_Value ("vertTexCoord"));
-      Pass.Attributes.Append (Shader.Attribute_Value ("vertColor"));
+      Pass.Attributes.Append (Shader.Attribute_Value ("vertexPosition"));
+      Pass.Attributes.Append (Shader.Attribute_Value ("vertexNormal"));
+      Pass.Attributes.Append (Shader.Attribute_Value ("vertexTexCoord"));
+      if not Pass.Lighting_Enabled then
+         Pass.Attributes.Append (Shader.Attribute_Value ("vertexColor"));
+      end if;
 
       if Pass.Has_Texture then
          Pass.Texture_Uniform := Shader.Uniform_Value ("materialTex");
@@ -386,7 +388,8 @@ package body Rho.Materials.Pass is
             Vertex_Source : constant String :=
                               Template.Execute
                                 (Rho.Paths.Config_File
-                                   ("shaders/vertex_shader_template.vert"),
+                                   ("shaders/webgl/"
+                                    & "vertex_shader_template.vert"),
                                  Write_Result => Write_Shader_Source);
          begin
             Vertex :=
@@ -400,7 +403,8 @@ package body Rho.Materials.Pass is
             Fragment_Source : constant String :=
                                 Template.Execute
                                   (Rho.Paths.Config_File
-                                     ("shaders/fragment_shader_template.frag"),
+                                     ("shaders/webgl/"
+                                      & "fragment_shader_template.frag"),
                                    Write_Result => Write_Shader_Source);
          begin
             Fragment :=

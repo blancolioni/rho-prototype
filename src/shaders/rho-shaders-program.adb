@@ -51,9 +51,9 @@ package body Rho.Shaders.Program is
       Shdrs : Shader_Array (1 .. Natural (Shader.Shaders.Length));
       Count : Natural := 0;
    begin
-      for Shdr of Shdrs loop
+      for Shdr of Shader.Shaders loop
          Count := Count + 1;
-         Shdrs (Count) := Shdr;
+         Shdrs (Count) := Shdr.Id;
       end loop;
 
       Shader.Id := Shader.Context.Renderer.Create_Program (Shdrs);
