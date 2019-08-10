@@ -16,10 +16,10 @@ package Rho.Draw_Binding is
 
    type Rho_Draw_Binding is access all Rho_Draw_Binding_Record'Class;
 
-   procedure Rho_New
-     (Draw_Binding : in out Rho_Draw_Binding;
-      Context      : not null access Rho.Context.Rho_Context_Record'Class;
-      Operation    : Rho.Render_Operation.Operation_Type);
+   function Rho_New
+     (Context      : not null access Rho.Context.Rho_Context_Record'Class;
+      Operation    : Rho.Render_Operation.Operation_Type)
+      return Rho_Draw_Binding;
 
    procedure Initialize
      (Draw_Binding : in out Rho_Draw_Binding_Record;
@@ -76,7 +76,7 @@ private
       record
          Loaded         : Boolean := False;
          Bound          : Boolean := False;
-         Context        : not null access Rho.Context.Rho_Context_Record'Class;
+         Context        : access Rho.Context.Rho_Context_Record'Class;
          Operation      : Rho.Render_Operation.Operation_Type;
          Vertex_Array   : Rho.Vertex_Array.Rho_Vertex_Array;
          Buffer         : Rho.Float_Buffer.Rho_Float_Buffer;

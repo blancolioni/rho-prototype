@@ -63,6 +63,12 @@ package Rho.Rendering is
       return Rho.Texture.Texture_Id
       is abstract;
 
+   procedure Load_Texture_Data_By_External_Id
+     (Renderer     : in out Rho_Renderer_Record;
+      Texture_Id   : Rho.Texture.Texture_Id;
+      External_Id  : String)
+   is abstract;
+
    procedure Load_Texture_Data
      (Renderer     : in out Rho_Renderer_Record;
       Texture_Id   : Rho.Texture.Texture_Id;
@@ -107,6 +113,21 @@ package Rho.Rendering is
       Name     : String)
       return Rho_Uniform_Id
       is abstract;
+
+   function Create_Vertex_Array
+     (Renderer       : in out Rho_Renderer_Record)
+      return Rho_Vertex_Array_Id
+      is abstract;
+
+   procedure Enable_Vertex_Array
+     (Renderer : in out Rho_Renderer_Record;
+      Id       : Rho_Vertex_Array_Id)
+   is abstract;
+
+   procedure Disable_Vertex_Array
+     (Renderer : in out Rho_Renderer_Record;
+      Id       : Rho_Vertex_Array_Id)
+   is abstract;
 
    procedure Bind_Vertex_Buffer
      (Renderer       : in out Rho_Renderer_Record;

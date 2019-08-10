@@ -21,4 +21,6 @@ package Rho is
    type Rho_Shader_Id is new Natural;
    type Rho_Program_Id is new Natural;
 
+   type Rho_Vertex_Array_Id is new Natural;
+
 end Rho;

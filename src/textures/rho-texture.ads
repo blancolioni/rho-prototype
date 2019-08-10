@@ -1,3 +1,5 @@
+private with Ada.Strings.Unbounded;
+
 with Cairo;
 
 with WL.Images;
@@ -61,6 +63,12 @@ package Rho.Texture is
       Path : String)
       return Rho_Texture;
 
+   function Create_From_External_Id
+     (Context     : not null access Rho.Context.Rho_Context_Record'Class;
+      Name        : String;
+      External_Id : String)
+      return Rho_Texture;
+
    function Create_From_Surface
      (Context : not null access Rho.Context.Rho_Context_Record'Class;
       Surface : Cairo.Cairo_Surface)
@@ -92,16 +100,18 @@ private
    type Rho_Texture_Record is
      new Rho.Object.Rho_Resource_Record with
       record
-         Id           : Texture_Id;
-         Context      : access Rho.Context.Rho_Context_Record'Class;
-         Surface      : Cairo.Cairo_Surface;
-         Data         : access Rho.Color.Rho_Color_2D_Array;
-         Region       : Rho.Rectangle.Rho_Rectangle;
-         S_Wrap       : Rho.Texture.Texture_Address_Mode;
-         T_Wrap       : Rho.Texture.Texture_Address_Mode;
-         Mag_Filter   : Rho.Texture.Texture_Filter_Type;
-         Uniform      : Rho.Shaders.Values.Rho_Uniform_Value;
-         Has_Uniform  : Boolean := False;
+         Id              : Texture_Id;
+         External_Id     : Ada.Strings.Unbounded.Unbounded_String;
+         Context         : access Rho.Context.Rho_Context_Record'Class;
+         Surface         : Cairo.Cairo_Surface;
+         Data            : access Rho.Color.Rho_Color_2D_Array;
+         Region          : Rho.Rectangle.Rho_Rectangle;
+         S_Wrap          : Rho.Texture.Texture_Address_Mode;
+         T_Wrap          : Rho.Texture.Texture_Address_Mode;
+         Mag_Filter      : Rho.Texture.Texture_Filter_Type;
+         Uniform         : Rho.Shaders.Values.Rho_Uniform_Value;
+         Has_Uniform     : Boolean := False;
+         Has_External_Id : Boolean := False;
       end record;
 
 end Rho.Texture;

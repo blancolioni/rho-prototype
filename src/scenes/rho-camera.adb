@@ -90,9 +90,12 @@ package body Rho.Camera is
    -- Create --
    ------------
 
-   function Create return Rho_Camera is
+   function Create
+     (Context : not null access Rho.Context.Rho_Context_Record'Class)
+      return Rho_Camera is
       Result : constant Rho_Camera := new Rho_Camera_Record;
    begin
+      Result.Initialize (Context, "");
       Result.Set_Position (0.0, 0.0, 0.0);
       Result.Set_Orientation (Rho.Float_Arrays.Unit_Matrix (3));
       return Result;

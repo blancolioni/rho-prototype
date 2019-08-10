@@ -84,9 +84,11 @@ package body Rho.Light is
 
    procedure Initialize
      (Light      : in out Rho_Light_Record;
+      Context    : not null access Rho.Context.Rho_Context_Record'Class;
       Light_Type : Rho_Light_Type)
    is
    begin
+      Rho.Node.Rho_Node_Record (Light).Initialize (Context, "");
       Light.Light_Type := Light_Type;
    end Initialize;
 
@@ -96,11 +98,12 @@ package body Rho.Light is
 
    procedure Rho_New
      (Light      : out Rho_Light;
+      Context    : not null access Rho.Context.Rho_Context_Record'Class;
       Light_Type : Rho_Light_Type)
    is
    begin
       Light := new Rho_Light_Record;
-      Light.Initialize (Light_Type);
+      Light.Initialize (Context, Light_Type);
    end Rho_New;
 
    -----------------------------

@@ -18,8 +18,8 @@ source_dir = src/textures
 source_dir = src/toolkit
 source_dir = src/tools
 source_dir = red_book
-main_unit = rho_demo
-exec_name = rho_demo
+main_unit = gnoga_demo
+exec_name = gnoga_demo
 config_dir = config
 path_unit = { unit = Rho.Paths path = src/rho-paths.ads }
 language = Ada

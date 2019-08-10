@@ -4321,16 +4321,20 @@ Context.Execute (
    is
    begin
       if Context.Rendering then
-         Context.Render_Script.Append (
-           "gl.uniform1("
-         & Location'Image & ","
-         & Support.Image (V0)
+         Context.Render_Script.Append
+           (
+           "gl.uniform1f("
+            & Support.Indexed_Object_Reference (Context, GLuint (Location))
+            & ","
+            & Support.Image (V0)
            & ")");
       else
-Context.Execute (
-        "uniform1("
-         & Location'Image & ","
-         & Support.Image (V0)
+         Context.Execute
+           (
+        "uniform1f("
+            & Support.Indexed_Object_Reference (Context, GLuint (Location))
+            & ","
+            & Support.Image (V0)
         & ")");
       end if;
    end Uniform;
@@ -4354,16 +4358,20 @@ Context.Execute (
          Data_Image := Data_Image & X'Image;
       end loop;
       if Context.Rendering then
-         Context.Render_Script.Append (
+         Context.Render_Script.Append
+           (
            "gl.uniform1fv("
-         & Location'Image & ","
-         & "new Float32Array([" & To_String (Data_Image) & "])"
+            & Support.Indexed_Object_Reference (Context, GLuint (Location))
+            & ","
+            & "new Float32Array([" & To_String (Data_Image) & "])"
            & ")");
       else
-Context.Execute (
-        "uniform1fv("
-         & Location'Image & ","
-         & "new Float32Array([" & To_String (Data_Image) & "])"
+         Context.Execute
+           (
+            "uniform1fv("
+            & Support.Indexed_Object_Reference (Context, GLuint (Location))
+            & ","
+            & "new Float32Array([" & To_String (Data_Image) & "])"
         & ")");
       end if;
    end Uniform;
@@ -4379,16 +4387,20 @@ Context.Execute (
    is
    begin
       if Context.Rendering then
-         Context.Render_Script.Append (
-           "gl.uniform1i("
-         & Location'Image & ","
-         & V0'Image
+         Context.Render_Script.Append
+           (
+            "gl.uniform1i("
+            & Support.Indexed_Object_Reference (Context, GLuint (Location))
+            & ","
+            & V0'Image
            & ")");
       else
-Context.Execute (
+         Context.Execute
+           (
         "uniform1i("
-         & Location'Image & ","
-         & V0'Image
+            & Support.Indexed_Object_Reference (Context, GLuint (Location))
+            & ","
+            & V0'Image
         & ")");
       end if;
    end Uniform;
@@ -4870,21 +4882,25 @@ Context.Execute (
    is
    begin
       if Context.Rendering then
-         Context.Render_Script.Append (
-           "gl.uniformMatrix4fv("
-         & Location'Image & ","
-         & Count'Image & ","
+         Context.Render_Script.Append
+           (
+            "gl.uniformMatrix4fv("
+            & Support.Indexed_Object_Reference (Context, GLuint (Location))
+            & ","
+            & Count'Image & ","
          & GLEnum_Property (Context, Transpose'Image) & ","
          & Support.Image (Value)
            & ")");
       else
-Context.Execute (
-        "uniformMatrix4fv("
-         & Location'Image & ","
-         & Count'Image & ","
-         & GLEnum_Property (Context, Transpose'Image) & ","
-         & Support.Image (Value)
-        & ")");
+         Context.Execute
+           (
+            "uniformMatrix4fv("
+            & Support.Indexed_Object_Reference (Context, GLuint (Location))
+            & ","
+            & Count'Image & ","
+            & GLEnum_Property (Context, Transpose'Image) & ","
+            & Support.Image (Value)
+            & ")");
       end if;
    end Uniform_Matrix_4fv;
 
@@ -5336,14 +5352,14 @@ Context.Execute (
    begin
       if Context.Rendering then
          Context.Render_Script.Append (
-           "gl.texParameter("
+           "gl.texParameteri("
          & Texture_Target_Values (Target)'Image & ","
          & Texture_Parameter_Name_Values (GL_TEXTURE_MAG_FILTER)'Image & ","
          & Texture_Mag_Filter_Values (Param)'Image
            & ")");
       else
 Context.Execute (
-        "texParameter("
+        "texParameteri("
          & Texture_Target_Values (Target)'Image & ","
          & Texture_Parameter_Name_Values (GL_TEXTURE_MAG_FILTER)'Image & ","
          & Texture_Mag_Filter_Values (Param)'Image
@@ -5363,14 +5379,14 @@ Context.Execute (
    begin
       if Context.Rendering then
          Context.Render_Script.Append (
-           "gl.texParameter("
+           "gl.texParameteri("
          & Texture_Target_Values (Target)'Image & ","
          & Texture_Parameter_Name_Values (GL_TEXTURE_MIN_FILTER)'Image & ","
          & Texture_Min_Filter_Values (Param)'Image
            & ")");
       else
 Context.Execute (
-        "texParameter("
+        "texParameteri("
          & Texture_Target_Values (Target)'Image & ","
          & Texture_Parameter_Name_Values (GL_TEXTURE_MIN_FILTER)'Image & ","
          & Texture_Min_Filter_Values (Param)'Image
@@ -5390,14 +5406,14 @@ Context.Execute (
    begin
       if Context.Rendering then
          Context.Render_Script.Append (
-           "gl.texParameter("
+           "gl.texParameteri("
          & Texture_Target_Values (Target)'Image & ","
          & Texture_Parameter_Name_Values (GL_TEXTURE_WRAP_S)'Image & ","
          & Texture_Wrap_Mode_Values (Param)'Image
            & ")");
       else
 Context.Execute (
-        "texParameter("
+        "texParameteri("
          & Texture_Target_Values (Target)'Image & ","
          & Texture_Parameter_Name_Values (GL_TEXTURE_WRAP_S)'Image & ","
          & Texture_Wrap_Mode_Values (Param)'Image
@@ -5417,14 +5433,14 @@ Context.Execute (
    begin
       if Context.Rendering then
          Context.Render_Script.Append (
-           "gl.texParameter("
+           "gl.texParameteri("
          & Texture_Target_Values (Target)'Image & ","
          & Texture_Parameter_Name_Values (GL_TEXTURE_WRAP_T)'Image & ","
          & Texture_Wrap_Mode_Values (Param)'Image
            & ")");
       else
 Context.Execute (
-        "texParameter("
+        "texParameteri("
          & Texture_Target_Values (Target)'Image & ","
          & Texture_Parameter_Name_Values (GL_TEXTURE_WRAP_T)'Image & ","
          & Texture_Wrap_Mode_Values (Param)'Image

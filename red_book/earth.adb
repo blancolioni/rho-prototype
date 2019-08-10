@@ -8,7 +8,6 @@ with Rho.Light;
 with Rho.Materials.Material;
 with Rho.Matrices;
 with Rho.Node;
-with Rho.Paths;
 with Rho.Scene;
 with Rho.Shapes;
 with Rho.Render_Window;
@@ -35,7 +34,7 @@ package body Earth is
    procedure Create_Demo
      (Handle : Rho.Handles.Rho_Handle)
    is
-      Scene : constant Rho.Scene.Rho_Scene := Rho.Scene.Create_Scene;
+      Scene : constant Rho.Scene.Rho_Scene := Rho.Scene.Create_Scene (Handle);
       Camera : constant Rho.Camera.Rho_Camera := Scene.Active_Camera;
       Sphere : constant Rho.Entity.Rho_Entity :=
                  Rho.Shapes.Quadric_Sphere
@@ -47,9 +46,8 @@ package body Earth is
       Window : constant Rho.Render_Window.Rho_Render_Window :=
                    Handle.Renderer.Create_Top_Level_Window;
       Texture  : constant Rho.Texture.Rho_Texture :=
-                   Rho.Texture.Create_From_Png
-                     (Handle, "earth",
-                      Rho.Paths.Config_File ("earth.png"));
+                   Rho.Texture.Create_From_External_Id
+                     (Handle, "earth", "earth");
       Material : constant Rho.Materials.Material.Rho_Material :=
                    Rho.Materials.Material.Rho_New_With_Texture
                      (Context  => Handle,
@@ -64,7 +62,7 @@ package body Earth is
       Camera.Look_At (0.0, 0.0, 0.0);
       Camera.Frustum (-1.0, 1.0, -1.0, 1.0, 1.5, 20.0);
       Sphere.Set_Material (Material);
-      Rho.Light.Rho_New (Light, Rho.Light.Point);
+      Rho.Light.Rho_New (Light, Handle, Rho.Light.Point);
       Light.Set_Position (1.0, 1.0, 1.0);
 
       Node.Set_Entity (Sphere);

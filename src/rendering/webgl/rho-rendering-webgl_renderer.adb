@@ -52,6 +52,19 @@ package body Rho.Rendering.WebGL_Renderer is
       Width, Height : Rho_Float)
       return Cairo.Cairo_Surface;
 
+   overriding function Create_Vertex_Array
+     (Renderer       : in out Rho_WebGL_Renderer_Record)
+      return Rho_Vertex_Array_Id;
+
+   overriding procedure Enable_Vertex_Array
+     (Renderer : in out Rho_WebGL_Renderer_Record;
+      Id       : Rho_Vertex_Array_Id);
+
+   overriding procedure Disable_Vertex_Array
+     (Renderer : in out Rho_WebGL_Renderer_Record;
+      Id       : Rho_Vertex_Array_Id)
+   is null;
+
    overriding function Load_Texture
      (Renderer   : in out Rho_WebGL_Renderer_Record;
       S_Wrap     : Rho.Texture.Texture_Address_Mode;
@@ -69,6 +82,11 @@ package body Rho.Rendering.WebGL_Renderer is
      (Renderer     : in out Rho_WebGL_Renderer_Record;
       Texture_Id   : Rho.Texture.Texture_Id;
       From_Data    : Rho.Color.Rho_Color_2D_Array);
+
+   overriding procedure Load_Texture_Data_By_External_Id
+     (Renderer     : in out Rho_WebGL_Renderer_Record;
+      Texture_Id   : Rho.Texture.Texture_Id;
+      External_Id  : String);
 
    overriding function Load_Buffer
      (Renderer : in out Rho_WebGL_Renderer_Record;
@@ -223,8 +241,16 @@ package body Rho.Rendering.WebGL_Renderer is
    end Create_Top_Level_Window;
 
    -------------------------
-   -- Create_GL_Renderer --
+   -- Create_Vertex_Array --
    -------------------------
+
+   overriding function Create_Vertex_Array
+     (Renderer       : in out Rho_WebGL_Renderer_Record)
+      return Rho_Vertex_Array_Id
+   is
+   begin
+      return Rho_Vertex_Array_Id (Renderer.Context.Create_Buffer);
+   end Create_Vertex_Array;
 
    function Create_WebGL_Renderer
      (Parent : in out Gnoga.Gui.Element.Element_Type'Class)
@@ -238,6 +264,20 @@ package body Rho.Rendering.WebGL_Renderer is
       Result.Parent_Element.Fill_Parent;
       return Rho_Renderer (Result);
    end Create_WebGL_Renderer;
+
+   -------------------------
+   -- Enable_Vertex_Array --
+   -------------------------
+
+   overriding procedure Enable_Vertex_Array
+     (Renderer : in out Rho_WebGL_Renderer_Record;
+      Id       : Rho_Vertex_Array_Id)
+   is
+   begin
+      Renderer.Context.Bind_Buffer
+        (Target => GL_Array_Buffer,
+         Buffer => GLuint (Id));
+   end Enable_Vertex_Array;
 
    ----------------------
    -- Exit_Render_Loop --
@@ -603,6 +643,27 @@ package body Rho.Rendering.WebGL_Renderer is
       Rho.Color.Free (Dest_Data);
 
    end Load_Texture_Data;
+
+   --------------------------------------
+   -- Load_Texture_Data_By_External_Id --
+   --------------------------------------
+
+   overriding procedure Load_Texture_Data_By_External_Id
+     (Renderer     : in out Rho_WebGL_Renderer_Record;
+      Texture_Id   : Rho.Texture.Texture_Id;
+      External_Id  : String)
+   is
+   begin
+      pragma Unreferenced (Texture_Id);
+      Renderer.Context.Tex_Image_2D
+        (Target         => GL_Texture_2d,
+         Level          => 0,
+         Internalformat => GL_Rgba,
+         Format         => GL_Rgba,
+         Item_Type      => GL_Unsigned_Byte,
+         Image_Id       => External_Id);
+
+   end Load_Texture_Data_By_External_Id;
 
    -----------------
    -- Render_Loop --

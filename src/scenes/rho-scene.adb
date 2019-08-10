@@ -66,11 +66,12 @@ package body Rho.Scene is
       use Rho.Mouse;
       Mouse : constant Rho_Mouse_State := Current_Mouse;
    begin
-      for Button in Mouse_Button loop
-         if Mouse.State.Button (Button)
-           /= Scene.Last_Mouse.Button (Button)
-         then
-            case Mouse.State.Button (Button) is
+      if Mouse /= null then
+         for Button in Mouse_Button loop
+            if Mouse.State.Button (Button)
+              /= Scene.Last_Mouse.Button (Button)
+            then
+               case Mouse.State.Button (Button) is
                when Down =>
                   Scene.Emit
                     (Rho.Event.Mouse_Button_Press
@@ -89,12 +90,12 @@ package body Rho.Scene is
                        (Rho.Event.Mouse_Button_Click
                           (Button, Mouse.State.X, Mouse.State.Y));
                   end if;
-            end case;
-         end if;
-      end loop;
+               end case;
+            end if;
+         end loop;
 
-      Scene.Last_Mouse := Mouse.State;
-
+         Scene.Last_Mouse := Mouse.State;
+      end if;
    end Check_Events;
 
    -----------------
@@ -114,14 +115,18 @@ package body Rho.Scene is
    -- Create_Scene --
    ------------------
 
-   function Create_Scene return Rho_Scene is
+   function Create_Scene
+     (Context : not null access Rho.Context.Rho_Context_Record'Class)
+      return Rho_Scene
+   is
       Result : constant Rho_Scene := new Rho_Scene_Record;
    begin
+      Result.Context := Context;
       Result.Root_Node := new Rho.Node.Rho_Node_Record;
-      Result.Root_Node.Set_Name ("root");
+      Result.Root_Node.Initialize (Context, "root");
       Result.Root_Node.Set_Event_Manager (Result);
 
-      Result.Active_Camera := Rho.Camera.Create;
+      Result.Active_Camera := Rho.Camera.Create (Context);
       Result.Active_Camera.Set_Position (0.0, 0.0, 0.0);
       Result.Active_Camera.Set_Orientation
         (0.0, 0.0, 0.0, -1.0);

@@ -5,6 +5,8 @@ with Rho.Rectangle;
 with Rho.Render_Target;
 with Rho.Viewport;
 
+limited with Rho.Context;
+
 package Rho.Camera is
 
    type View_Volume_Shape is
@@ -105,7 +107,9 @@ package Rho.Camera is
         Rho.Render_Target.Rho_Render_Target_Record'Class)
    is null;
 
-   function Create return Rho_Camera;
+   function Create
+     (Context : not null access Rho.Context.Rho_Context_Record'Class)
+      return Rho_Camera;
 
 private
 

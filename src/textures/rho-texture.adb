@@ -70,6 +70,30 @@ package body Rho.Texture is
       end return;
    end Create_From_Data;
 
+   -----------------------------
+   -- Create_From_External_Id --
+   -----------------------------
+
+   function Create_From_External_Id
+     (Context     : not null access Rho.Context.Rho_Context_Record'Class;
+      Name        : String;
+      External_Id : String)
+      return Rho_Texture
+   is
+   begin
+      return Result : constant Rho_Texture := new Rho_Texture_Record do
+         Result.Context := Context;
+         Result.Set_Name (Name);
+         Result.Id := 0;
+         Result.S_Wrap := Wrap;
+         Result.T_Wrap := Wrap;
+         Result.Mag_Filter := Nearest;
+         Result.Has_External_Id := True;
+         Result.External_Id :=
+           Ada.Strings.Unbounded.To_Unbounded_String (External_Id);
+      end return;
+   end Create_From_External_Id;
+
    -----------------------
    -- Create_From_Image --
    -----------------------
@@ -211,7 +235,10 @@ package body Rho.Texture is
               Texture.Mag_Filter);
       end if;
 
-      if Texture.Data /= null then
+      if Texture.Has_External_Id then
+         Texture.Context.Renderer.Load_Texture_Data_By_External_Id
+           (Texture.Id, Ada.Strings.Unbounded.To_String (Texture.External_Id));
+      elsif Texture.Data /= null then
          Texture.Context.Renderer.Load_Texture_Data
            (Texture.Id, Texture.Data.all);
       elsif Texture.Surface /= Null_Surface then

@@ -99,7 +99,7 @@ package body Rho.Draw_Binding is
    is
    begin
       Item.Buffer.Load;
-      Rho.Vertex_Array.Rho_New (Item.Vertex_Array);
+      Rho.Vertex_Array.Rho_New (Item.Vertex_Array, Item.Context);
       Item.Vertex_Array.Load;
       Item.Vertex_Array.Enable;
       for Binding of Item.Bindings loop
@@ -125,14 +125,17 @@ package body Rho.Draw_Binding is
    -- Rho_New --
    ------------
 
-   procedure Rho_New
-     (Draw_Binding : in out Rho_Draw_Binding;
-      Context      : not null access Rho.Context.Rho_Context_Record'Class;
+   function Rho_New
+     (Context      : not null access Rho.Context.Rho_Context_Record'Class;
       Operation    : Rho.Render_Operation.Operation_Type)
+      return Rho_Draw_Binding
    is
    begin
-      Draw_Binding := new Rho_Draw_Binding_Record;
-      Draw_Binding.Initialize (Context, Operation);
+      return Draw_Binding : constant Rho_Draw_Binding :=
+        new Rho_Draw_Binding_Record
+      do
+         Draw_Binding.Initialize (Context, Operation);
+      end return;
    end Rho_New;
 
    -------------------

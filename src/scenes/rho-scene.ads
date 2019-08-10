@@ -11,6 +11,8 @@ with Rho.Mouse;
 with Rho.Node;
 with Rho.Transition;
 
+limited with Rho.Context;
+
 package Rho.Scene is
 
    type Rho_Scene_Record is
@@ -72,7 +74,9 @@ package Rho.Scene is
       Transition : not null access
         Rho.Transition.Rho_Transition_Record'Class);
 
-   function Create_Scene return Rho_Scene;
+   function Create_Scene
+     (Context : not null access Rho.Context.Rho_Context_Record'Class)
+     return Rho_Scene;
 
    function Last_Render_Time
      (Scene : Rho_Scene_Record'Class)
@@ -107,6 +111,7 @@ private
      new Rho.Renderable.Rho_Renderable
      and Rho.Event.Rho_Event_Manager with
       record
+         Context        : access Rho.Context.Rho_Context_Record'Class;
          Loaded         : Boolean := False;
          Lights         : Light_Vectors.Vector;
          Cameras        : Camera_Vectors.Vector;

@@ -172,10 +172,10 @@ package body Rho.Entity is
 
                for Draw_Op of Entity.Draw_Ops loop
                   declare
-                     Binding : Rho.Draw_Binding.Rho_Draw_Binding;
+                     Binding : constant Rho.Draw_Binding.Rho_Draw_Binding :=
+                                 Rho.Draw_Binding.Rho_New
+                                   (Entity.Context, Draw_Op.Operation);
                   begin
-                     Rho.Draw_Binding.Rho_New
-                       (Binding, Entity.Context, Draw_Op.Operation);
 
                      Binding.Append
                        (Attribute => Material_Pass.Position_Attribute,

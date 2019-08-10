@@ -4,6 +4,8 @@ with Rho.Moveable;
 with Rho.Node;
 with Rho.Render_Target;
 
+limited with Rho.Context;
+
 package Rho.Light is
 
    type Rho_Light_Type is (Ambient, Point, Directional, Spot);
@@ -15,11 +17,14 @@ package Rho.Light is
 
    type Rho_Light is access all Rho_Light_Record'Class;
 
-   procedure Rho_New (Light      : out Rho_Light;
-                     Light_Type : Rho_Light_Type);
+   procedure Rho_New
+     (Light      : out Rho_Light;
+      Context    : not null access Rho.Context.Rho_Context_Record'Class;
+      Light_Type : Rho_Light_Type);
 
    procedure Initialize
      (Light      : in out Rho_Light_Record;
+      Context    : not null access Rho.Context.Rho_Context_Record'Class;
       Light_Type : Rho_Light_Type);
 
    overriding procedure Execute_Render

@@ -8,8 +8,8 @@ package Gnoga.Gui.Element.Canvas.Context_WebGL is
 
    type GLuchar is mod 2 ** 8;
    type GLchar is range -128 .. 127;
-   type GLint8 is range -2 ** 15 .. 2 ** 15 - 1;
-   type GLuint8 is mod 2 ** 16;
+   type GLint8 is range -2 ** 7 .. 2 ** 7 - 1;
+   type GLuint8 is mod 2 ** 8;
    type GLint16 is range -2 ** 15 .. 2 ** 15 - 1;
    type GLuint16 is mod 2 ** 16;
    type GLint is range -2 ** 31 .. 2 ** 31 - 1;

@@ -44,13 +44,11 @@ package Rho.Shaders is
 
    function Is_Attribute
      (Shader_Value : Rho_Shader_Value_Record)
-      return Boolean
-     with Post => not (Is_Attribute'Result and then Shader_Value.Is_Uniform);
+      return Boolean;
 
    function Is_Uniform
      (Shader_Value : Rho_Shader_Value_Record)
-      return Boolean
-     with Post => not (Is_Uniform'Result and then Shader_Value.Is_Attribute);
+      return Boolean;
 
    function Attribute_Location
      (Shader_Value : Rho_Shader_Value_Record'Class)
@@ -89,7 +87,7 @@ private
    function Is_Uniform
      (Shader_Value : Rho_Shader_Value_Record)
       return Boolean
-   is (Shader_Value.Class = Attribute);
+   is (Shader_Value.Class = Uniform);
 
    function Attribute_Location
      (Shader_Value : Rho_Shader_Value_Record'Class)

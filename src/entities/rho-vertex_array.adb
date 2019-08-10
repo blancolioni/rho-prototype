@@ -1,5 +1,5 @@
-with GL;
-with GL_Types;
+with Rho.Context;
+with Rho.Rendering;
 
 package body Rho.Vertex_Array is
 
@@ -8,9 +8,8 @@ package body Rho.Vertex_Array is
    -------------
 
    procedure Disable (Vertex_Array : in out Rho_Vertex_Array_Record) is
-      pragma Unreferenced (Vertex_Array);
    begin
-      GL.Bind_Vertex_Array (0);
+      Vertex_Array.Context.Renderer.Disable_Vertex_Array (Vertex_Array.Id);
    end Disable;
 
    ------------
@@ -19,7 +18,7 @@ package body Rho.Vertex_Array is
 
    procedure Enable (Vertex_Array : in out Rho_Vertex_Array_Record) is
    begin
-      GL.Bind_Vertex_Array (GL_Types.Uint (Vertex_Array.Id));
+      Vertex_Array.Context.Renderer.Enable_Vertex_Array (Vertex_Array.Id);
    end Enable;
 
    ----------
@@ -29,13 +28,9 @@ package body Rho.Vertex_Array is
    procedure Load (Vertex_Array : in out Rho_Vertex_Array_Record) is
    begin
       if not Vertex_Array.Loaded then
-         declare
-            Id : aliased GL_Types.Uint;
-         begin
-            GL.Gen_Vertex_Arrays (1, Id'Access);
-            Vertex_Array.Id := Vertex_Array_Id (Id);
-            Vertex_Array.Loaded := True;
-         end;
+         Vertex_Array.Id :=
+           Vertex_Array.Context.Renderer.Create_Vertex_Array;
+         Vertex_Array.Loaded := True;
       end if;
    end Load;
 
@@ -43,10 +38,15 @@ package body Rho.Vertex_Array is
    -- Rho_New --
    ------------
 
-   procedure Rho_New (Vertex_Array : in out Rho_Vertex_Array) is
+   procedure Rho_New
+     (Vertex_Array : in out Rho_Vertex_Array;
+      Context      : not null access Rho.Context.Rho_Context_Record'Class)
+   is
    begin
-      Vertex_Array := new Rho_Vertex_Array_Record'(Loaded => False,
-                                                  Id     => 0);
+      Vertex_Array := new Rho_Vertex_Array_Record'
+        (Loaded  => False,
+         Id      => 0,
+         Context => Context);
    end Rho_New;
 
 end Rho.Vertex_Array;

@@ -193,7 +193,7 @@ package body Rho.Node is
       Child : constant Rho_Node :=
                 new Rho_Node_Record;
    begin
-      Child.Set_Name (Name);
+      Child.Initialize (Parent.Context, Name);
       Child.Parent_Identity := False;
       Rho_Node_Record'Class (Parent.all).Append_Child (Child);
       return Child;
